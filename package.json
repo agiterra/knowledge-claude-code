@@ -1,0 +1,12 @@
+{
+  "name": "@agiterra/knowledge-claude-code",
+  "version": "0.1.0",
+  "description": "Knowledge vault runtime for Claude Code — search, journal, enrichment, self-compaction, and memory discipline. Schema-agnostic, works with any .knowledge/ directory.",
+  "files": [
+    "hooks/",
+    "skills/",
+    ".claude-plugin/"
+  ],
+  "license": "MIT",
+  "author": "Tim Garthwaite <https://github.com/mividtim>"
+}
