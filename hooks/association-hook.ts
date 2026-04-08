@@ -39,7 +39,9 @@ async function main() {
       if (a.score < 0.1) continue;
 
       const summary = a.summary.slice(0, 120);
-      lines.push(`  ${a.source}: ${summary}`);
+      const tag = a.search_method === "vector" ? "vec" : "kw";
+      const score = a.score.toFixed(2);
+      lines.push(`  [${tag} ${score}] ${a.source}: ${summary}`);
     }
 
     if (lines.length > 0) {

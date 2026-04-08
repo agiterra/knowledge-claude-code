@@ -1,6 +1,6 @@
 {
   "name": "knowledge",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Knowledge vault runtime — search, journal, enrichment, self-compaction, and memory discipline. Schema-agnostic, works with any .knowledge/ directory.",
   "author": {
     "name": "Tim Garthwaite",
@@ -9,6 +9,6 @@
   "license": "MIT",
   "keywords": ["knowledge", "memory", "vault", "journal", "search", "enrichment", "compaction"],
   "skills": "./skills/",
-  "postInstall": "bun install --frozen-lockfile",
-  "postUpdate": "bun install --frozen-lockfile"
+  "postInstall": "bun install",
+  "postUpdate": "bun install"
 }
