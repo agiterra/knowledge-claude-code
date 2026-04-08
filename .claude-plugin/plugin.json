@@ -8,5 +8,7 @@
   },
   "license": "MIT",
   "keywords": ["knowledge", "memory", "vault", "journal", "search", "enrichment", "compaction"],
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "postInstall": "bun install --frozen-lockfile",
+  "postUpdate": "bun install --frozen-lockfile"
 }
