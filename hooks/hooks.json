@@ -9,6 +9,16 @@
             "command": "echo '\u26a0\ufe0f Context was compacted. Run /knowledge:boot to restore continuity.'"
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ensure-vectors.sh\"",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
