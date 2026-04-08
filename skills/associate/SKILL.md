@@ -8,7 +8,7 @@ argument-hint: "<text>"
 
 **Scripts path**: The Python scripts live in the `knowledge-tools` plugin. Resolve the path with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
 ```
 
 Run a lightweight keyword-only association search against the knowledge vault.
@@ -18,7 +18,7 @@ embeddings or LLM calls.
 ## Usage
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/association-search.py \"$ARGUMENTS\" --no-vector")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/association-search.py \"$ARGUMENTS\" --no-vector")
 ```
 
 Results are returned as concise context lines showing matched files with

@@ -11,7 +11,7 @@ that inform how you should spend your next tokens.
 
 **Scripts path**: Resolve with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
 ```
 
 ## Signals
@@ -19,7 +19,7 @@ KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>
 ### 1. Curiosity — novel journal entries this session
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py recent 20 2>/dev/null | grep -c \"$(date +%Y-%m-%d)\"")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py recent 20 2>/dev/null | grep -c \"$(date +%Y-%m-%d)\"")
 ```
 
 - 0-1 entries today: LOW — you're executing, not exploring
@@ -50,7 +50,7 @@ be thinking about /knowledge:save or /knowledge:handoff soon.
 ### 4. IPC Activity — messages sent/received this session
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 -c \"import sqlite3,os,time; db=sqlite3.connect(os.path.expanduser('~/.wire/wire.db')); today=time.strftime('%Y-%m-%d'); rows=db.execute('SELECT count(*) FROM messages WHERE created_at > ? * 1000', (int(time.mktime(time.strptime(today, \\\"%Y-%m-%d\\\"))),)).fetchone(); print(rows[0])\" 2>/dev/null || echo 'N/A'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 -c \"import sqlite3,os,time; db=sqlite3.connect(os.path.expanduser('~/.wire/wire.db')); today=time.strftime('%Y-%m-%d'); rows=db.execute('SELECT count(*) FROM messages WHERE created_at > ? * 1000', (int(time.mktime(time.strptime(today, \\\"%Y-%m-%d\\\"))),)).fetchone(); print(rows[0])\" 2>/dev/null || echo 'N/A'")
 ```
 
 - 0: ISOLATED — no inter-agent communication
@@ -60,7 +60,7 @@ Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tool
 ### 5. Drift Check — last compression test score
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search 'compression test score' 2>/dev/null | head -5")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search 'compression test score' 2>/dev/null | head -5")
 ```
 
 Report the most recent score if available. If no recent test,

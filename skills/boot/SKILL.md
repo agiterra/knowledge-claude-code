@@ -39,7 +39,7 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
      prompt="You are maintaining a knowledge vault's search indexes. Run these steps:
 
      1. Resolve scripts path:
-        KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+        KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
         If empty, try: /Users/tim/Projects/Agiterra/knowledge-tools/scripts
 
      2. Scan for unindexed files:

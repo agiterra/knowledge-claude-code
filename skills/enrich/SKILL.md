@@ -8,7 +8,7 @@ argument-hint: "<query>"
 
 **Scripts path**: The Python scripts live in the `knowledge-tools` plugin. Resolve the path with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
 ```
 
 Run a full association search combining keywords and vector similarity, with
@@ -22,7 +22,7 @@ relevance filtering.
 Run the hybrid search with JSON output for structured results:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/association-search.py --json \"$ARGUMENTS\"")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/association-search.py --json \"$ARGUMENTS\"")
 ```
 
 This combines keyword overlap and vector cosine similarity to find the most
@@ -34,7 +34,7 @@ When you have too many results or need precise relevance scoring, pipe
 through the Sonnet filter:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/sonnet-filter.py \"$ARGUMENTS\" \"<context>\"")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/sonnet-filter.py \"$ARGUMENTS\" \"<context>\"")
 ```
 
 Replace `<context>` with a brief description of why you're searching — what

@@ -23,7 +23,7 @@ done
 
 if [ -z "$BACKUP_SCRIPT" ]; then
     # Fallback: search plugin cache
-    for d in ~/.claude/plugins/cache/*/knowledge-tools/*/scripts/precompact-backup.sh; do
+    for d in ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts/precompact-backup.sh; do
         [ -f "$d" ] && BACKUP_SCRIPT="$d" && break
     done
 fi

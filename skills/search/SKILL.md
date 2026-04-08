@@ -8,7 +8,7 @@ argument-hint: "<query>"
 
 **Scripts path**: The Python scripts live in the `knowledge-tools` plugin. Resolve the path with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
 ```
 
 Search the semantic index built by `/knowledge:index`. Finds memory files by
@@ -19,7 +19,7 @@ keyword overlap between your query and each file's indexed keywords and summary.
 For simple lookups where keyword matching is sufficient:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search '$ARGUMENTS'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search '$ARGUMENTS'")
 ```
 
 Results are ranked by relevance score:
@@ -55,7 +55,7 @@ Task(
 2. Use the expanded terms in the search:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search '$ARGUMENTS' --expand '<haiku-output>'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search '$ARGUMENTS' --expand '<haiku-output>'")
 ```
 
 Expanded terms match at reduced weight (0.6x for keywords, 0.3x for summary)
@@ -71,7 +71,7 @@ find something.
 2. Get structured candidates with expansion:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search-json '$ARGUMENTS' --expand '<terms>'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py search-json '$ARGUMENTS' --expand '<terms>'")
 ```
 
 3. Spawn a Haiku subagent to rerank:
@@ -97,13 +97,13 @@ Task(
 If a search didn't surface a file you expected, log it for evaluation:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py miss 'query terms' 'expected/file/path.md' 'optional reason'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py miss 'query terms' 'expected/file/path.md' 'optional reason'")
 ```
 
 Review the miss log to improve keywords:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py misses")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py misses")
 ```
 
 ## Journal Search
@@ -115,13 +115,13 @@ If your vault search doesn't find what you need, or if you're looking for the
 *reasoning behind* a belief rather than the belief itself, search the journal:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search '$ARGUMENTS'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search '$ARGUMENTS'")
 ```
 
 To look up a specific provenance reference (`[j:42]` in identity.md):
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
 ```
 
 ## Tips

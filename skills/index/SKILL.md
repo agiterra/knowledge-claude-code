@@ -8,7 +8,7 @@ argument-hint: "[scan|file <path>|update <path> <summary> <keywords>|stats]"
 
 **Scripts path**: The Python scripts live in the `knowledge-tools` plugin. Resolve the path with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
 ```
 
 Build a keyword-based semantic index of all markdown files in `.knowledge/`.
@@ -23,7 +23,7 @@ commodity work — don't burn Opus tokens on it. Spawn a Task with
 1. Scan for files that need indexing:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py scan")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py scan")
 ```
 
 2. For each `NEEDS_INDEX` file, spawn a Haiku subagent to generate summary + keywords:
@@ -51,7 +51,7 @@ Task(
 3. Use the Haiku output to update the index:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py update .knowledge/path/to/note.md 'summary from haiku' 'keywords,from,haiku' 'related/paths.md'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/index-vault.py update .knowledge/path/to/note.md 'summary from haiku' 'keywords,from,haiku' 'related/paths.md'")
 ```
 
 4. Repeat for each file that needs indexing.
