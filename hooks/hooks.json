@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/association-hook.py\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/association-hook.ts\"",
             "timeout": 5
           }
         ]
