@@ -30,15 +30,37 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
 ## Phase 3: Memory Integrity
 
 1. Check the compaction summary AND recovery data for unpersisted learnings — look for "I'll remember," "lesson learned," "note to self," operator corrections, or confirmed preferences that weren't written to `.knowledge/`. Persist them NOW, before continuing. A promise to remember without a file write is a lie.
-2. Run `/knowledge:index stats`. Index any stale or missing files.
+2. Semantic index + vectors — launch as a **background agent** so boot isn't blocked:
+   ```
+   Agent(
+     description="Index and vectorize vault",
+     run_in_background=true,
+     model="haiku",
+     prompt="You are maintaining a knowledge vault's search indexes. Run these steps:
+
+     1. Resolve scripts path:
+        KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1)
+        If empty, try: /Users/tim/Projects/Agiterra/knowledge-tools/scripts
+
+     2. Scan for unindexed files:
+        python3 $KNOWLEDGE_SCRIPTS/index-vault.py scan
+        For each NEEDS_INDEX file, read it and generate:
+        - A one-line semantic summary
+        - 10-25 keywords (concrete terms, abstract themes, synonyms, abbreviations)
+        - Related file paths from the vault (if any)
+        Then update: python3 $KNOWLEDGE_SCRIPTS/index-vault.py update '<path>' '<summary>' '<keywords-csv>' '<related-csv>'
+
+     3. Run incremental vector update:
+        python3 $KNOWLEDGE_SCRIPTS/vectorize.py --incremental
+
+     Report what you indexed and vectorized when done."
+   )
+   ```
+   Do NOT wait for this agent to finish — continue boot immediately.
 3. Journal check:
    - If `.knowledge/journal.db` exists, verify with: `Bash(command="sqlite3 .knowledge/journal.db 'SELECT count(*) || \" entries, \" || count(DISTINCT category) || \" categories\" FROM journal'")`
    - If `.knowledge/journal.db` doesn't exist but `.knowledge/journal.sql` does, run `/knowledge:journal rebuild`
    - If neither exists, run `/knowledge:journal init`
-4. Vector index check:
-   - If `.knowledge/vectors.db` exists, run incremental update to catch stale vectors:
-     `Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge-tools/*/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/vectorize.py --incremental 2>&1 | tail -5")`
-   - If vectors.db doesn't exist but deps are available, run `/knowledge:vectorize`
 
 ## Phase 4: Environment Check
 
