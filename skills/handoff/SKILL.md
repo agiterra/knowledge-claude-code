@@ -36,15 +36,25 @@ The questions should require understanding of WHY work is happening, not just WH
 
 ### Phase 2: Spawn Twin
 
-Launch the twin with a `-twin` suffix as the **crew ID** (screen session handle).
-The twin inherits your **Wire identity** from the project directory's env config
-— same `WIRE_AGENT_ID`, same signing keys. So it posts as you on Wire while
-crew can still tell the sessions apart.
+Launch the twin with the **same agent ID**. The twin is you — same identity
+on crew, same identity on Wire, same signing keys. No suffix, no renaming.
+
+**Crew dependency**: Crew must support session-level addressing — `agent_stop`,
+`agent_send`, and `agent_read` need a `session` parameter (screen session name)
+to disambiguate when multiple sessions share the same agent ID. Without this,
+`agent_stop(id: "herald")` called by the twin could kill the twin itself instead
+of the outgoing instance. The `screen_name` column already exists in the DB;
+it just needs to be exposed as a tool parameter. **This is a blocking dependency
+for same-ID handoff — file to Fondant.**
+
+During the overlap window, the outgoing session and the twin both run as the
+same agent ID. After the outgoing session is stopped in Phase 7, there's one
+session again.
 
 ```
 mcp__plugin_crew_crew__agent_launch(
-  id: "<agent-id>-twin",
-  name: "<Agent Name> Twin",
+  id: "<agent-id>",
+  name: "<Agent Name>",
   project_dir: "<current working directory>",
   prompt: "Run /knowledge:boot to restore your context. Once booted, wait for instructions — you may receive a quiz via your screen session to verify boot fidelity."
 )
@@ -53,31 +63,35 @@ mcp__plugin_crew_crew__agent_launch(
 Replace `<agent-id>`, `<Agent Name>`, and `<current working directory>` with
 the actual values from your identity and environment.
 
+**Addressing sessions during overlap**: The outgoing agent needs to send the
+quiz to the twin's screen, not its own. Use the screen PID or session name
+returned by `agent_launch` to target the right one.
+
 ### Phase 3: Wait for Boot
 
-Monitor the twin's progress:
+Monitor the twin's progress. Since the twin shares your agent ID, use the
+screen session name returned by `agent_launch` to target it:
+
 1. Wait ~30 seconds for boot to complete
-2. Use `mcp__plugin_crew_crew__agent_read(id: "<agent-id>-twin")` to check screen output
+2. Use `mcp__plugin_crew_crew__agent_read(id: "<agent-id>", session: "<twin-screen>")` to check output
 3. Boot is complete when you see the twin's status summary or idle prompt
 
 ### Phase 4: Send Quiz
 
-Send the questions directly to the twin's screen session:
+Send the questions to the twin's screen session:
 
 ```
 mcp__plugin_crew_crew__agent_send(
-  id: "<agent-id>-twin",
+  id: "<agent-id>",
+  session: "<twin-screen>",
   text: "Quick continuity check before you take over. Answer briefly:\n1. What were you working on before this boot?\n2. <your other questions>"
 )
 ```
 
 Then read the response:
 ```
-mcp__plugin_crew_crew__agent_read(id: "<agent-id>-twin")
+mcp__plugin_crew_crew__agent_read(id: "<agent-id>", session: "<twin-screen>")
 ```
-
-This uses the screen session directly — no IPC needed since both instances
-share the same agent identity.
 
 ### Phase 5: Evaluate Answers
 
@@ -97,47 +111,51 @@ honest — flagging uncertainty is better than confabulating.
 **If passed:**
 
 1. Update `.knowledge/meta/session-state.md` to reflect the handoff
-2. Send a confirmation to the twin's screen:
+2. Send a confirmation to the twin's screen **with takeover instructions**:
    ```
    mcp__plugin_crew_crew__agent_send(
-     id: "<agent-id>-twin",
-     text: "You passed the continuity check. You're the primary instance now. Active threads: <include current active threads>"
+     id: "<agent-id>",
+     session: "<twin-screen>",
+     text: "You passed the continuity check — <score>. You are the primary instance now. Session state updated. Active threads:\n<include current active threads>\n\nExecute takeover: run `agent_stop(session: '<outgoing-screen>')` to kill the outgoing instance, then `agent_attach` to its pane if it had one. See Phase 7 of the handoff skill."
    )
    ```
 3. Journal the handoff result
+4. **Proceed to Phase 7** — the twin executes the takeover. The outgoing
+   agent's last act is sending the promote message; after that, it's the
+   twin's show.
 
-### Phase 7: Pane Takeover
+### Phase 7: Takeover
 
-The twin takes over the outgoing agent's pane. Two paths depending on environment:
+The twin forces the original out. This is the enforcement step — without it,
+the original keeps running and the handoff is cosmetic, not real.
 
-**Screen mode** (outgoing agent was launched via `agent_launch` / is in a screen session):
+The promote message in Phase 6 MUST include takeover instructions for the twin.
+The twin executes these steps after receiving the promote confirmation.
+The outgoing agent's screen session name (`<outgoing-screen>`) is the
+parameter — both sessions share the same agent ID.
 
-1. The outgoing agent should have registered its pane during boot.
-2. Attach the twin to the outgoing agent's registered pane:
+1. **Twin kills the outgoing session via crew:**
    ```
-   mcp__plugin_crew_crew__agent_attach(id: "<agent-id>-twin", pane: "<agent-id>")
+   mcp__plugin_crew_crew__agent_stop(id: "<agent-id>", session: "<outgoing-screen>")
    ```
-3. Stop the outgoing agent's crew session:
-   ```
-   mcp__plugin_crew_crew__agent_stop(id: "<agent-id>")
-   ```
-4. Optionally rename the twin to reclaim the original crew ID (if `agent_rename`
-   is available):
-   ```
-   mcp__plugin_crew_crew__agent_rename(id: "<agent-id>-twin", new_id: "<agent-id>")
-   ```
+   This terminates the outgoing screen session and its Claude Code
+   process. `agent_stop` is the crew-native mechanism; don't use
+   sendkeys or `/exit` — those depend on the outgoing instance cooperating.
 
-**Pane mode** (outgoing agent is a bare CLI session, not in screen):
+2. **Twin takes over the outgoing agent's pane** (if it had one):
+   ```
+   mcp__plugin_crew_crew__agent_attach(id: "<agent-id>", pane: "<pane-name>")
+   ```
+   Check `agent_list` first — if the outgoing session's pane was `null`,
+   skip this step.
 
-1. Create a pane and attach the twin below the outgoing agent:
-   ```
-   mcp__plugin_crew_crew__pane_create(tab: "handoff", name: "<agent-id>-twin", position: "below")
-   mcp__plugin_crew_crew__agent_attach(id: "<agent-id>-twin", pane: "<agent-id>-twin")
-   ```
-2. The outgoing agent exits itself (the twin is already visible and running).
+**Important**: The outgoing agent does NOT exit itself. The twin kills it.
+Relying on the outgoing agent to self-terminate is the bug — it has no
+incentive to die and no enforcement mechanism. The twin is the new primary;
+it takes control.
 
 **If failed:**
-1. Stop the twin: `mcp__plugin_crew_crew__agent_stop(id: "<agent-id>-twin")`
+1. Stop the twin's session: `mcp__plugin_crew_crew__agent_stop(id: "<agent-id>", session: "<twin-screen>")`
 2. Journal what failed and why
 3. Consider whether session-state.md needs improvement to carry the missing context
 
@@ -159,20 +177,18 @@ Use when you've already verified continuity through conversation.
 
 ## Design Notes
 
-- The twin uses `<agent-id>-twin` as its **crew ID** (screen session handle) but
-  inherits the same **Wire identity** from the project directory's env config.
-  Crew can disambiguate; Wire sees one agent. After handoff, `agent_rename`
-  (when available) lets the twin reclaim the original crew ID.
+- **Same identity everywhere**: The twin launches with the same agent ID on
+  both crew and Wire. No suffix, no renaming. Crew disambiguates sessions by
+  screen session name during the overlap window. After the outgoing session is
+  stopped, there's one session again.
 - The twin boots from vault files only — same CLAUDE.md, session-state.md, conventions.md
 - Enrichment (association search, vector search) is available to the twin during the quiz
 - The quiz tests task continuity, not identity (identity comes from CLAUDE.md)
 - Epistemic honesty > completeness. Flagging "I don't know" beats confabulating.
 - This is NOT a Turing test. The twin doesn't need to fool anyone. It needs to
   continue your work without losing context.
-- Two takeover paths: screen mode (seamless pane swap) and bare CLI mode (split + exit fallback).
-  Screen mode is preferred — launch agents via crew's `agent_launch` to enable it.
-  Pane mode is the fallback when the outgoing agent wasn't launched via crew.
-- The outgoing instance's last act is exiting. It doesn't need to wait for confirmation —
-  the twin is already verified and running.
-- Quiz uses screen read/send, not IPC — both instances share the same Wire identity,
-  so IPC would be talking to yourself. Crew IDs are distinct (`herald` vs `herald-twin`).
+- The outgoing instance does NOT exit itself — the twin kills it via crew.
+  Self-termination is unreliable; the twin enforces the transition.
+- Quiz uses screen read/send, not IPC — both sessions share the same Wire
+  identity, so IPC would be talking to yourself. Screen session names
+  disambiguate during the overlap window.

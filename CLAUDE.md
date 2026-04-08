@@ -49,6 +49,28 @@ surface. Instructions get skimmed; values get followed.
 it's a recurring pattern). The plugin teaches the pipeline; each agent's
 CLAUDE.md carries the conviction.
 
+## Two Contexts
+
+The knowledge plugin serves two contexts:
+
+### Agent vaults (persistent agents like Brioche, Herald, Fondant)
+- CLAUDE.md in the project root defines identity
+- Journal records personal learnings, corrections, decisions
+- Session-state tracks continuity across compactions
+- Boot restores state after compaction
+- Save preserves state before exit
+
+### Project knowledge bases (repos like fabrica-v3)
+- No identity — CLAUDE.md defines project rules, not agent personality
+- Journal records project decisions: why conventions were adopted,
+  architectural rationale, context behind rules
+- Session-state is per-worktree (ephemeral agents write theirs there)
+- Enrichment gives all agents access to project knowledge
+- Any agent can query the journal before changing a convention
+
+No config flag distinguishes the two — the vault structure is the same.
+The difference is in what content lives there and who writes to it.
+
 ## Vault Architecture
 
 The knowledge vault lives at `.knowledge/` in the project root (override

@@ -118,7 +118,7 @@ If your vault search doesn't find what you need, or if you're looking for the
 Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search '$ARGUMENTS'")
 ```
 
-To look up a specific provenance reference (`[j:42]` in identity.md):
+To look up a specific provenance reference (`[j:42]` in CLAUDE.md or a vault file):
 
 ```
 Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
