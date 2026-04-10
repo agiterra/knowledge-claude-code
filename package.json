@@ -1,7 +1,7 @@
 {
   "name": "@agiterra/knowledge-claude-code",
-  "version": "0.4.2",
-  "description": "Knowledge vault runtime for Claude Code — search, journal, enrichment, self-compaction, and memory discipline.",
+  "version": "0.5.0",
+  "description": "Knowledge vault runtime for Claude Code \u2014 search, journal, enrichment, self-compaction, and memory discipline.",
   "dependencies": {
     "@agiterra/knowledge-tools": "agiterra/knowledge-tools#v0.2.2"
   },

@@ -29,6 +29,11 @@
             "type": "command",
             "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/association-hook.ts\"",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/time-enrichment.sh\"",
+            "timeout": 2
           }
         ]
       }
