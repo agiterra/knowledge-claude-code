@@ -37,10 +37,10 @@ Read `.knowledge/meta/session-state.md` and update it:
 
 Keep it under 80 lines. Focus on what the next-you needs to DO.
 
-### 3. Commit
+### 3. Backup journal DB and commit
 
 ```
-Bash(command="cd .knowledge && git add -A && git diff --cached --stat && git commit -m 'Fast save: [brief label]' && git push 2>/dev/null || true")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); [ -n \"$SCRIPTS\" ] && bash \"$SCRIPTS/journal-dump.sh\"; cd .knowledge && git add -A && git diff --cached --stat && git commit -m 'Fast save: [brief label]' && git push 2>/dev/null || true")
 ```
 
 ### 4. Done
