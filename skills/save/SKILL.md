@@ -50,10 +50,10 @@ Run `/knowledge:journal` with:
 Bash(command="cd .knowledge && git add -A && git diff --cached --stat")
 ```
 
-If there are changes, show the diff summary and commit:
+If there are changes, commit and push:
 
 ```
-Bash(command="cd .knowledge && git commit -m 'Session save: [brief description]'")
+Bash(command="cd .knowledge && git commit -m 'Session save: [brief description]' && git push 2>/dev/null || true")
 ```
 
 If no changes, skip silently.
