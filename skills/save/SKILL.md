@@ -47,7 +47,7 @@ Run `/knowledge:journal` with:
 ## Phase 4: Commit the Vault
 
 ```
-Bash(command="cd .knowledge && git add -A && git diff --cached --stat")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); [ -n \"$SCRIPTS\" ] && bash \"$SCRIPTS/journal-dump.sh\"; cd .knowledge && git add -A && git diff --cached --stat")
 ```
 
 If there are changes, commit and push:
