@@ -33,3 +33,20 @@ if [ -n "$BACKUP_SCRIPT" ]; then
 else
     echo "precompact: knowledge-tools backup script not found" >&2
 fi
+
+# Also checkpoint the vault (journal backup + commit + push). The transcript
+# backup above is orthogonal — it captures pre-compact conversation state for
+# recovery. Checkpoint captures on-disk vault state.
+CHECKPOINT=""
+for d in "$MARKETPLACE_DIR"/knowledge-tools/*/scripts/checkpoint.sh; do
+    [ -f "$d" ] && CHECKPOINT="$d" && break
+done
+if [ -z "$CHECKPOINT" ]; then
+    for d in ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts/checkpoint.sh; do
+        [ -f "$d" ] && CHECKPOINT="$d" && break
+    done
+fi
+if [ -n "$CHECKPOINT" ] && [ -n "$CWD" ]; then
+    TIMESTAMP=$(date +%Y-%m-%d\ %H:%M)
+    bash "$CHECKPOINT" --cwd "$CWD" --message "Auto-save vault before compact ($TIMESTAMP)" || true
+fi
