@@ -1,39 +1,36 @@
 #!/bin/bash
 # session-end.sh — Knowledge vault SessionEnd hook
 #
-# Runs when the session ends. The agent can no longer execute tools,
-# so this is the safety net: commit any uncommitted vault changes.
-#
-# The rich editorial work should be done by /knowledge:save BEFORE exit.
-# This hook is just the git commit that catches anything left over.
-#
-# Input (stdin JSON): session_id, cwd
+# Safety net for vault persistence: runs checkpoint (journal backup + git add
+# + commit + push) when the session ends. The agent can no longer execute
+# tools, so this catches anything /knowledge:save didn't.
 
 set -euo pipefail
 
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
-# Determine vault directory
-VAULT_DIR="$CWD/${KNOWLEDGE_VAULT:-.knowledge}"
-if [ ! -d "$VAULT_DIR" ]; then
+[ -n "$CWD" ] || exit 0
+
+# Find checkpoint.sh in the plugin cache.
+CHECKPOINT=""
+for d in ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts/checkpoint.sh; do
+    [ -f "$d" ] && CHECKPOINT="$d" && break
+done
+
+if [ -z "$CHECKPOINT" ]; then
+    # Fallback: sibling knowledge-tools checkout (local dev).
+    PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    MARKETPLACE_DIR="$(dirname "$(dirname "$PLUGIN_ROOT")")"
+    for d in "$MARKETPLACE_DIR"/knowledge-tools/scripts/checkpoint.sh; do
+        [ -f "$d" ] && CHECKPOINT="$d" && break
+    done
+fi
+
+if [ -z "$CHECKPOINT" ]; then
+    echo "session-end: checkpoint.sh not found; vault not saved" >&2
     exit 0
 fi
 
-# Check if vault is inside a git repo
-cd "$CWD"
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    exit 0
-fi
-
-# Check for uncommitted changes in the vault
-if git diff --quiet -- "$VAULT_DIR" && git diff --cached --quiet -- "$VAULT_DIR" && [ -z "$(git ls-files --others --exclude-standard -- "$VAULT_DIR")" ]; then
-    exit 0
-fi
-
-# Auto-commit vault changes
 TIMESTAMP=$(date +%Y-%m-%d\ %H:%M)
-git add "$VAULT_DIR"
-git commit -m "Auto-save vault on session end ($TIMESTAMP)" --no-gpg-sign 2>/dev/null || true
-
-echo "session-end: vault auto-committed at $TIMESTAMP"
+bash "$CHECKPOINT" --cwd "$CWD" --message "Auto-save vault on session end ($TIMESTAMP)"

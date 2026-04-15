@@ -21,13 +21,16 @@ for a second process to prove the first one works.
 
 ## Sequence
 
-### Phase 1: Fast save
+### Phase 1: Checkpoint
 
-Run `/knowledge:fast-save`. This updates session-state.md and commits the vault.
-No learnings scan, no journal — just a snapshot. Speed matters here because
-recycle is about shedding context, not editorial review.
+Run `/knowledge:checkpoint`. This is pure persistence — `journal.py backup`, git
+add, commit, push. No conversation scan, no session-state edit.
 
-If you have important unpersisted learnings, run `/knowledge:save` first, THEN
+Editorial scan at recycle time is wasted effort: you're shedding this context
+either way, and a learning that wasn't persisted before recycle was going to be
+lost to compaction too. Discipline is upstream, not here.
+
+If you have important unpersisted learnings, run `/knowledge:save` BEFORE
 `/knowledge:recycle`.
 
 ### Phase 2: Send clear + boot via screen
@@ -56,10 +59,12 @@ output in your fresh context.
 
 ## Design notes
 
-- **Why fast-save, not full save**: recycle is about speed. The full save scans
-  the entire conversation for unpersisted learnings and writes a journal entry.
-  Fast-save just checkpoints session state. If you want the full editorial
-  save, run `/knowledge:save` before `/knowledge:recycle`.
+- **Why checkpoint, not fast-save**: recycle is about shedding context. Any
+  editorial scan at this point is wasted — a learning that's still in-context
+  instead of in-vault is unpersisted by definition, and compaction would lose
+  it just the same. Checkpoint is the honest version: flush what's already
+  on disk, boot fresh, trust the vault. `/knowledge:save` before `/knowledge:recycle`
+  is the escape hatch for agents who know they have unpersisted state.
 - **Why screen stuff, not pane_send**: screen is always available (agents run in
   screen sessions). Crew's pane_send requires the crew plugin to be loaded and
   the agent to be in a registered pane. Screen stuff works everywhere.

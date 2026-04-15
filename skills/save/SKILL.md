@@ -8,18 +8,27 @@ allowed-tools: Bash, Read, Write, Edit, Skill
 Run this before ending a session to deliberately preserve context.
 This is the editorial counterpart to the PreCompact hook's crash dump.
 
-## Phase 1: Unpersisted Learnings
+## Phase 1: Process Pending Lessons
 
-Scan your conversation for things that should have been persisted but weren't:
+Two inputs feed this phase:
 
-1. **Operator corrections** — "no, not that", "don't do X", "stop doing Y"
-2. **Confirmed approaches** — "yes exactly", "perfect", accepted without pushback
-3. **Promises to remember** — "I'll remember", "noted", "got it"
-4. **New facts about people, projects, or infrastructure**
+1. **The Pending Lessons section of `session-state.md`** — anything earlier
+   fast-saves queued for editorial processing. Read this first.
+2. **Your conversation** — scan for lessons that aren't yet in session-state
+   either: operator corrections ("no, not that"), confirmed approaches
+   ("yes exactly"), promises to remember, new facts about people / projects /
+   infrastructure.
 
-For each one found: persist it NOW. Write to the appropriate vault file
-(CLAUDE.md for values, conventions.md for behavioral rules, a new file
-for new knowledge). A promise to remember without a file write is a lie.
+For each lesson: decide where it belongs — CLAUDE.md for values, a feedback-*.md
+file for behavioral rules, project-*.md for project context, a new file for new
+knowledge. Write it to the proper location now.
+
+After processing, **clear the Pending Lessons section** of `session-state.md`.
+The queue is empty. A lesson that survives in Pending Lessons after `/knowledge:save`
+is a bug — it either should have been promoted to a vault file or consciously
+deferred with a note.
+
+A promise to remember without a file write is a lie.
 
 ## Phase 2: Update Session State
 
@@ -44,19 +53,15 @@ Run `/knowledge:journal` with:
   Include: what was built/decided/learned, any corrections received,
   any open threads left for next session.
 
-## Phase 4: Commit the Vault
+## Phase 4: Checkpoint
+
+Run `/knowledge:checkpoint` (or invoke its script directly) with a descriptive commit message:
 
 ```
-Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); [ -n \"$SCRIPTS\" ] && bash \"$SCRIPTS/journal-dump.sh\"; cd .knowledge && git add -A && git diff --cached --stat")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message 'Session save: [brief description]'")
 ```
 
-If there are changes, commit and push:
-
-```
-Bash(command="cd .knowledge && git commit -m 'Session save: [brief description]' && git push 2>/dev/null || true")
-```
-
-If no changes, skip silently.
+Checkpoint handles the mechanics: `journal.py backup`, `git add`, `git commit` if changes, `git push` if origin exists. Idempotent — skips silently on no-op.
 
 ## Phase 5: Confirm
 
