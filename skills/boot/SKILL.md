@@ -68,7 +68,16 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
    ```
    Bash(command="ps aux | grep -E '(python3|node)' | grep -v grep | head -20")
    ```
-2. Check for any pending events or messages relevant to your role.
+2. **Verify Wire heartbeats are still firing** (not just registered). Registration is persistent; a cron scheduler crash leaves you silently starving for pokes.
+   ```
+   Bash(command="curl -sS \"$WIRE_URL/heartbeats?agent_id=$AGENT_ID\" 2>/dev/null | python3 -c 'import json,sys,time; hbs=json.load(sys.stdin); now=time.time()*1000; [print(f\"{h[\\\"id\\\"]} {h[\\\"cron\\\"]} last_fired={int((now-h[\\\"last_fired\\\"])/60000)}m ago\" if h.get(\"last_fired\") else f\"{h[\\\"id\\\"]} {h[\\\"cron\\\"]} NEVER FIRED\") for h in hbs]' 2>/dev/null || echo 'no heartbeats'")
+   ```
+   Any heartbeat showing "NEVER FIRED" or stale beyond its cron interval is broken — flag it and consider re-creating it with `heartbeat_create`.
+3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project. The sidecar is keyed by cwd hash; if the process died, vault writes will silently NOT be indexed.
+   ```
+   Bash(command="cwd=\"$(pwd)\"; id=\"kx-$(echo -n \"$cwd\" | shasum -a 256 | cut -c1-8)\"; sqlite3 ~/.wire/crews.db \"SELECT screen_pid FROM agents WHERE id='$id'\" 2>/dev/null | xargs -I{} sh -c 'ps -p {} >/dev/null 2>&1 && echo \"KX $id alive (pid {})\" || echo \"KX $id DEAD — indexing is stalled; call knowledge-indexer launch()\"'")
+   ```
+4. Check for any pending events or messages relevant to your role.
 
 ## Phase 5: Resume Work
 
