@@ -32,6 +32,11 @@
           },
           {
             "type": "command",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/channel-enrichment.ts\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/time-enrichment.sh\"",
             "timeout": 2
           }
