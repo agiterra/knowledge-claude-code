@@ -118,7 +118,13 @@ async function main() {
       journalLimit: 15,
     });
     const assocs = result.results;
-    if (assocs.length === 0) process.exit(0);
+    if (assocs.length === 0) {
+      // "No matches" and "hook didn't fire" look identical from the agent's
+      // perspective — surface the no-match path on stderr so they're
+      // distinguishable in CC hook traces.
+      console.error(`[channel-enrich] 0 associations for topic=${topic} from=${from} (query: ${queryText.slice(0, 80)})`);
+      process.exit(0);
+    }
 
     const lines: string[] = [];
     const seen = new Set<string>();
