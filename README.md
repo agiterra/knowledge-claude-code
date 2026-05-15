@@ -1,17 +1,33 @@
-# knowledge-claude-code
+# knowledge
 
-Knowledge vault runtime — journal, search, enrichment, and compaction recovery for `.knowledge/` directories.
+> Persistent memory for your AI agent. A vault of markdown files, an append-only journal, and search that survives context compaction.
 
-## Prerequisites
+Part of the [Agiterra Multi-Agent Toolkit](https://github.com/agiterra/handbook).
 
-- Python 3.10+ (required for vector and index scripts)
+## What this gets you
+
+- **Your agent remembers across sessions.** Not just notes — a structured vault with an editorial index, a journal of *why* things are the way they are, and search across all of it.
+- **Compaction is no longer a memory wipe.** When Claude Code compacts context, your agent runs `/knowledge:boot` and is back where they left off.
+- **Pair with [knowledge-indexer](https://github.com/agiterra/knowledge-indexer-claude-code)** for auto-indexing on every vault write — semantic + keyword search runs in milliseconds.
+
+## Quick setup
+
+If you have a Claude Code agent open, say:
+
+> "Install the Agiterra knowledge plugin and initialize a vault for me."
+
+Or manually:
+
+```
+/plugin marketplace add agiterra/claude-marketplace   # one-time
+/plugin install knowledge@agiterra
+```
+
+Then in any project: `/knowledge:init` to scaffold a `.knowledge/` directory.
+
+### Prerequisites
+- Python 3.10+ (vector + index scripts)
 - Bun (https://bun.sh)
-
-## Install
-
-```
-/plugin install agiterra/knowledge-claude-code
-```
 
 ## Tools / Skills
 
@@ -30,6 +46,11 @@ Knowledge vault runtime — journal, search, enrichment, and compaction recovery
 - `knowledge:handoff` — spawn a fresh agent, quiz it, hand off primary status if it passes
 - `knowledge:vitals` — check current drive states (curiosity, fatigue, drift, engagement)
 - `knowledge:associate` — fast keyword-only association search (no embeddings, <100ms)
+
+## Concepts
+
+- [Knowledge vaults — agent vault vs project vault](https://github.com/agiterra/handbook/blob/main/CORE.md#3-knowledge-vaults)
+- [Where knowledge belongs — orchestrator's decision tree](https://github.com/agiterra/handbook/blob/main/PROJECTS.md#knowledge-placement-decision-tree)
 
 ## Configuration
 
