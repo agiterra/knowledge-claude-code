@@ -56,6 +56,19 @@ Then in any project: `/knowledge:init` to scaffold a `.knowledge/` directory.
 
 No required env vars. The vault defaults to `.knowledge/` in the current working directory. Override with `KNOWLEDGE_DIR` if needed.
 
+### Auto-memory bridge (`KNOWLEDGE_AUTO_MEMORY_BRIDGE`)
+
+Claude Code ships with built-in auto-memory at `~/.claude/projects/<slug>/memory/`. Its `MEMORY.md` is injected into context at session start (up to ~200 lines), and the system prompt instructs Claude to write learnings there. Without coordination this competes with `.knowledge/` for the same writes — operator preferences drift, journal stays sparse, CC-only memory becomes silently load-bearing.
+
+The `auto-memory-bridge` SessionStart hook makes auto-memory a **derived view of the vault**:
+
+- Reads the most recent journal entries, current `session-state.md` Active Work, and any hand-written feedback/user/project/reference files
+- Regenerates `MEMORY.md` as an index pointing at the vault as canonical
+- Hand-written individual memory files (`feedback_*.md`, `user_*.md`, etc.) are preserved and indexed by their frontmatter `description`
+- If `MEMORY.md` doesn't have the `AUTO-GENERATED` marker, the hook treats it as user-managed and leaves it alone
+
+Opt out per-session: `KNOWLEDGE_AUTO_MEMORY_BRIDGE=0`
+
 ### Inbound channel enrichment
 
 Agents spawned via crew that should auto-enrich incoming IPC messages with vault context can opt in by setting `KNOWLEDGE_ENRICH_RULES` in their launch env. The knowledge plugin's `channel-enrichment` UserPromptSubmit hook parses this var and, on each channel-delivered prompt, looks up vault associations for the message `payload.text` and injects them into the receiver's context.
