@@ -21,17 +21,24 @@ for a second process to prove the first one works.
 
 ## Sequence
 
-### Phase 1: Checkpoint
+### Phase 1: Fast-save
 
-Run `/knowledge:checkpoint`. This is pure persistence — `journal.py backup`, git
-add, commit, push. No conversation scan, no session-state edit.
+Run `/knowledge:fast-save`. This updates session-state with what the next-you
+needs to pick up, queues unpersisted lessons into the Pending Lessons section,
+and checkpoints (git add/commit/push). It skips the heavy stuff (journal entry,
+semantic indexing, vectorization).
 
-Editorial scan at recycle time is wasted effort: you're shedding this context
-either way, and a learning that wasn't persisted before recycle was going to be
-lost to compaction too. Discipline is upstream, not here.
+The whole purpose of recycle is to preserve context across a fresh window.
+session-state.md is the load-bearing artifact for next-session continuity,
+and it has to be written at the recycle boundary — that's exactly where the
+next session starts cold. A recycle that runs only mechanical persistence
+throws away the very thing you're trying to preserve; the next-you boots
+into stale state and rediscovers what you already learned.
 
-If you have important unpersisted learnings, run `/knowledge:save` BEFORE
-`/knowledge:recycle`.
+If you want a heavier persist (journal entry + full editorial review), run
+`/knowledge:save` manually before `/knowledge:recycle` instead — but recycle's
+default path is fast-save because the speed matches the moment and session-state
+update is the load-bearing artifact, not the journal entry.
 
 ### Phase 2: Send clear + boot via screen
 
@@ -59,12 +66,15 @@ output in your fresh context.
 
 ## Design notes
 
-- **Why checkpoint, not fast-save**: recycle is about shedding context. Any
-  editorial scan at this point is wasted — a learning that's still in-context
-  instead of in-vault is unpersisted by definition, and compaction would lose
-  it just the same. Checkpoint is the honest version: flush what's already
-  on disk, boot fresh, trust the vault. `/knowledge:save` before `/knowledge:recycle`
-  is the escape hatch for agents who know they have unpersisted state.
+- **Why fast-save, not checkpoint**: recycle is about preserving context across
+  a fresh window, not shedding it. session-state.md is the artifact the next-you
+  boots from; if recycle doesn't update it, the next-you boots into stale state
+  and rediscovers what you already learned. The "editorial scan is wasted" earlier
+  framing was wrong — the scan IS the preservation. Fast-save writes session-state,
+  queues pending lessons, and checkpoints. The full `/knowledge:save` (journal
+  entry + heavier editorial) is available manually for when it matters; not the
+  default cadence at every recycle. Fixed 2026-05-18 after the bug bit two
+  agents in one session.
 - **Why screen stuff, not pane_send**: screen is always available (agents run in
   screen sessions). Crew's pane_send requires the crew plugin to be loaded and
   the agent to be in a registered pane. Screen stuff works everywhere.
