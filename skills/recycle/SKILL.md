@@ -21,24 +21,34 @@ for a second process to prove the first one works.
 
 ## Sequence
 
-### Phase 1: Fast-save
+### Phase 1: Fast-save — BLOCKING, DO THIS FIRST
 
-Run `/knowledge:fast-save`. This updates session-state with what the next-you
-needs to pick up, queues unpersisted lessons into the Pending Lessons section,
-and checkpoints (git add/commit/push). It skips the heavy stuff (journal entry,
-semantic indexing, vectorization).
+**Before anything else in this skill**, invoke `/knowledge:fast-save` using
+the Skill tool. This is not optional and not paraphrasable. Use this exact
+call:
 
-The whole purpose of recycle is to preserve context across a fresh window.
-session-state.md is the load-bearing artifact for next-session continuity,
-and it has to be written at the recycle boundary — that's exactly where the
-next session starts cold. A recycle that runs only mechanical persistence
-throws away the very thing you're trying to preserve; the next-you boots
-into stale state and rediscovers what you already learned.
+```
+Skill(skill="knowledge:fast-save")
+```
+
+Wait for it to complete. Verify session-state.md was updated and committed.
+**Do NOT proceed to Phase 2 until fast-save has run and succeeded.**
+
+If you skip this step, the next-you boots into stale state. Recycle's entire
+purpose is preserving context for the fresh window — fast-save IS the
+preservation. Skipping it is exactly the bug this skill was fixed to prevent
+(shipped 2026-05-18 after the prior framing — "run checkpoint, editorial
+scan is wasted" — caused two agents in one session to lose context).
+
+What fast-save does:
+- Updates `session-state.md` with what the next-you needs to pick up
+- Queues unpersisted lessons into the Pending Lessons section
+- Checkpoints (git add/commit/push)
+- Skips the heavy stuff (journal entry, semantic indexing, vectorization)
 
 If you want a heavier persist (journal entry + full editorial review), run
-`/knowledge:save` manually before `/knowledge:recycle` instead — but recycle's
-default path is fast-save because the speed matches the moment and session-state
-update is the load-bearing artifact, not the journal entry.
+`/knowledge:save` manually before `/knowledge:recycle` instead. Recycle's
+default is fast-save because the speed matches the moment.
 
 ### Phase 2: Send clear + boot via screen
 
@@ -75,6 +85,14 @@ output in your fresh context.
   entry + heavier editorial) is available manually for when it matters; not the
   default cadence at every recycle. Fixed 2026-05-18 after the bug bit two
   agents in one session.
+- **Why the explicit Skill(...) call template in Phase 1**: v0.7.2 first
+  shipped this fix as prose ("Run /knowledge:fast-save"). Madeleine ran the
+  skill on 2026-05-19 and *skipped Phase 1 anyway* — the prose form was
+  apparently skimmable, since reading "Run X" doesn't force invocation of X.
+  v0.7.5 makes Phase 1 an unmissable Skill tool call template the agent must
+  execute before Phase 2. Lesson: a skill that depends on the agent invoking
+  another skill must specify the literal tool call, not narrate the
+  dependency.
 - **Why screen stuff, not pane_send**: screen is always available (agents run in
   screen sessions). Crew's pane_send requires the crew plugin to be loaded and
   the agent to be in a registered pane. Screen stuff works everywhere.

@@ -1,6 +1,6 @@
 {
   "name": "knowledge",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Knowledge vault runtime — search, journal, enrichment, self-compaction, and memory discipline. Schema-agnostic, works with any .knowledge/ directory.",
   "author": {
     "name": "Tim Garthwaite",
