@@ -34,13 +34,7 @@ Write(file_path=".knowledge/meta/session-state.md", content="# Session State\n\n
 Write(file_path=".env", content="# Credentials — not committed\n# Add environment variables your agent needs here\n")
 ```
 
-5. Initialize .knowledge as a separate git repo (keeps vault private):
-
-```
-Bash(command="cd .knowledge && git init && git add -A && git commit -m 'Initial vault'")
-```
-
-6. Tell the user:
+5. Tell the user:
    - Edit CLAUDE.md to define the agent's mission, voice, autonomy, and values
    - Edit `.knowledge/meta/session-state.md` after each session (or during — assume interruption!)
    - Add to the project's CLAUDE.md: "After context compaction, run /knowledge:boot"
