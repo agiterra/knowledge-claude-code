@@ -12,8 +12,17 @@
 # uses — atomic, well-tested. Clean vault = no-op (sub-millisecond exit).
 #
 # Loss window improves from "the whole session" to "one agent turn."
+#
+# Failure mode discipline (v0.7.7, 2026-05-29): this hook is opportunistic.
+# The agent's turn must NEVER fail because of a checkpoint hiccup. The
+# original `set -euo pipefail` combined with `2>&1 | tail -3` swallowed
+# stderr AND propagated any non-zero exit, which CC surfaced as
+# "Failed with non-blocking status code: No stderr output" — useless
+# without the underlying error message. v0.7.7 drops `-e`, ends with an
+# explicit `exit 0`, and redirects the checkpoint run's output to
+# $VAULT_DIR/.last-checkpoint.log for post-hoc debugging.
 
-set -euo pipefail
+set -uo pipefail
 
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
@@ -52,4 +61,7 @@ if [ -z "$CHECKPOINT" ]; then
 fi
 
 TIMESTAMP=$(date +%Y-%m-%d\ %H:%M)
-bash "$CHECKPOINT" --cwd "$CWD" --message "Auto-save vault on stop ($TIMESTAMP)" 2>&1 | tail -3
+LOG="$VAULT_DIR/.last-checkpoint.log"
+bash "$CHECKPOINT" --cwd "$CWD" --message "Auto-save vault on stop ($TIMESTAMP)" \
+    > "$LOG" 2>&1 || true
+exit 0
