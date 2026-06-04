@@ -52,6 +52,17 @@ Then in any project: `/knowledge:init` to scaffold a `.knowledge/` directory.
 - [Knowledge vaults — agent vault vs project vault](https://github.com/agiterra/handbook/blob/main/CORE.md#3-knowledge-vaults)
 - [Where knowledge belongs — orchestrator's decision tree](https://github.com/agiterra/handbook/blob/main/PROJECTS.md#knowledge-placement-decision-tree)
 
+## Vault vs. journal — the discipline that keeps memory honest
+
+The plugin gives your agent two memory stores with different jobs:
+
+- **The vault** (`.knowledge/*.md`) — your agent's *current* beliefs, rules, identity, and learnings. This is what gets searched and **auto-injected into context** on every user prompt and every configured Wire event. It answers *"what do I know right now?"*
+- **The journal** (`journal.db`, via `knowledge:journal`) — an append-only log of *why* those beliefs exist: the context behind each rule, correction, and decision. The journal is **deliberately not part of prompt enrichment** — never auto-searched or injected. It answers *"why is it this way?"*
+
+The vault holds the rule; the journal holds the intent behind it. So one discipline is worth hard-coding into how your agent works:
+
+> **Before you change a rule, read its journal.** When you're about to rewrite or drop a rule in the vault, first query the journal (`knowledge:journal`) for why it was set. Then either **preserve the original intent** — adjust the rule without discarding what it was protecting — or **knowingly reject that intent**, journaling why the old reason no longer holds. Never overwrite a hard-won rule blind: the vault tells you the rule, but only the journal remembers what it cost to learn.
+
 ## Configuration
 
 No required env vars. The vault defaults to `.knowledge/` in the current working directory. Override with `KNOWLEDGE_DIR` if needed.
