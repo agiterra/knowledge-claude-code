@@ -68,15 +68,16 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
    ```
    Bash(command="ps aux | grep -E '(python3|node)' | grep -v grep | head -20")
    ```
-2. **Verify Wire heartbeats are still firing** (not just registered). Registration is persistent; a cron scheduler crash leaves you silently starving for pokes.
+2. **Verify Wire heartbeats are still firing** (not just registered). Registration is persistent; a cron scheduler crash leaves you silently starving for pokes. Use the wire plugin's MCP tool — the raw `/heartbeats` endpoint requires a Bearer JWT, so an unauthenticated curl gets an auth-error object, chokes iterating it, and reports "no heartbeats" no matter the truth (a silent false-negative):
    ```
-   Bash(command="curl -sS \"$WIRE_URL/heartbeats?agent_id=$AGENT_ID\" 2>/dev/null | python3 -c 'import json,sys,time; hbs=json.load(sys.stdin); now=time.time()*1000; [print(f\"{h[\\\"id\\\"]} {h[\\\"cron\\\"]} last_fired={int((now-h[\\\"last_fired\\\"])/60000)}m ago\" if h.get(\"last_fired\") else f\"{h[\\\"id\\\"]} {h[\\\"cron\\\"]} NEVER FIRED\") for h in hbs]' 2>/dev/null || echo 'no heartbeats'")
+   mcp__plugin_wire_wire__heartbeat_list({ agent_id: "<your AGENT_ID>" })
    ```
-   Any heartbeat showing "NEVER FIRED" or stale beyond its cron interval is broken — flag it and consider re-creating it with `heartbeat_create`.
-3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project. The sidecar is keyed by cwd hash; if the process died, vault writes will silently NOT be indexed.
+   Compare each heartbeat's `last_fired` against its `cron` interval. Anything that never fired or is stale beyond its interval is broken — flag it and consider re-creating it with `heartbeat_create`. An empty list means none are registered — fine if your role doesn't use periodic self-wakeups; flag it if session state says you should have one.
+3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project. The sidecar is keyed by cwd hash; if the process died, vault writes will silently NOT be indexed. (The not-registered case must print explicitly — a pipe into `xargs -I{}` runs nothing on empty input, so the old form printed nothing exactly when the sidecar was missing entirely.)
    ```
-   Bash(command="cwd=\"$(pwd)\"; id=\"kx-$(echo -n \"$cwd\" | shasum -a 256 | cut -c1-8)\"; sqlite3 ~/.wire/crews.db \"SELECT screen_pid FROM agents WHERE id='$id'\" 2>/dev/null | xargs -I{} sh -c 'ps -p {} >/dev/null 2>&1 && echo \"KX $id alive (pid {})\" || echo \"KX $id DEAD — indexing is stalled; call knowledge-indexer launch()\"'")
+   Bash(command="cwd=\"$(pwd)\"; id=\"kx-$(echo -n \"$cwd\" | shasum -a 256 | cut -c1-8)\"; pid=$(sqlite3 ~/.wire/crews.db \"SELECT screen_pid FROM agents WHERE id='$id'\" 2>/dev/null); if [ -z \"$pid\" ]; then echo \"KX $id NOT REGISTERED — knowledge-indexer isn't installed for this project, or the sidecar was never launched\"; elif ps -p \"$pid\" >/dev/null 2>&1; then echo \"KX $id alive (pid $pid)\"; else echo \"KX $id DEAD (stale pid $pid) — indexing is stalled; call knowledge-indexer launch()\"; fi")
    ```
+   NOT REGISTERED is fine when the knowledge-indexer plugin isn't installed for this project (indexing rides the boot/save flows instead); flag it if the project normally runs one.
 4. Check for any pending events or messages relevant to your role.
 
 ## Phase 5: Resume Work

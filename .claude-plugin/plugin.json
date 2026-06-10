@@ -1,13 +1,21 @@
 {
   "name": "knowledge",
-  "version": "0.7.8",
-  "description": "Knowledge vault runtime — search, journal, enrichment, self-compaction, and memory discipline. Schema-agnostic, works with any .knowledge/ directory.",
+  "version": "0.7.9",
+  "description": "Knowledge vault runtime \u2014 search, journal, enrichment, self-compaction, and memory discipline. Schema-agnostic, works with any .knowledge/ directory.",
   "author": {
     "name": "Tim Garthwaite",
     "url": "https://github.com/mividtim"
   },
   "license": "MIT",
-  "keywords": ["knowledge", "memory", "vault", "journal", "search", "enrichment", "compaction"],
+  "keywords": [
+    "knowledge",
+    "memory",
+    "vault",
+    "journal",
+    "search",
+    "enrichment",
+    "compaction"
+  ],
   "skills": "./skills/",
   "postInstall": "bun install",
   "postUpdate": "bun install"
