@@ -4,6 +4,9 @@
  * Reads the user prompt from stdin (Claude Code hook JSON), runs association
  * search against the knowledge vault, and outputs brief context for injection.
  *
+ * Operator prompts only: channel-delivered messages (IPC / webhook firehoses)
+ * are skipped here — enriching them is the opt-in channel-enrichment hook's job.
+ *
  * Designed to be fast (<500ms). If search fails or returns nothing, outputs
  * nothing (empty stdout = no context injection).
  *
@@ -24,6 +27,14 @@ async function main() {
 
   const prompt = hookInput.prompt ?? "";
   if (!prompt || prompt.length < 10) process.exit(0);
+
+  // Channel-delivered messages (IPC, and github/slack webhook firehoses) are the
+  // channel-enrichment hook's job — opt-in per topic via KNOWLEDGE_ENRICH_RULES.
+  // This baseline hook is for OPERATOR prompts; running a vault search over a
+  // ~30KB webhook payload on every event is a fleet-wide token sink that rarely
+  // surfaces anything relevant (Brioche/Tim, 2026-06-15). Skip them here — the
+  // useful operator-prompt associations and opt-in channel enrichment both stay.
+  if (prompt.includes("<channel ")) process.exit(0);
 
   try {
     const result = await searchAssociations(prompt, { topK: 8, vectorLimit: 5 });
