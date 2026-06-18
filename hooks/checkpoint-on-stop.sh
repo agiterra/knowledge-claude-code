@@ -29,13 +29,15 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
 [ -n "$CWD" ] || exit 0
 
-VAULT_DIR="${CWD}/${KNOWLEDGE_VAULT:-.knowledge}"
+# Vault via the shared knowledge-tools primitive (absolute KNOWLEDGE_VAULT wins; else $CWD/.knowledge).
+__RV="$(dirname "$0")/../node_modules/@agiterra/knowledge-tools/scripts/resolve-vault.sh"
+if [ -f "$__RV" ]; then . "$__RV"; else VAULT_DIR="${KNOWLEDGE_VAULT:-.knowledge}"; case "$VAULT_DIR" in /*) :;; *) VAULT_DIR="$CWD/$VAULT_DIR";; esac; fi
 [ -d "$VAULT_DIR" ] || exit 0
 [ -d "$VAULT_DIR/.git" ] || [ -f "$VAULT_DIR/../.git/HEAD" ] || true   # tolerate either layout
 
 # Fast path: if the vault has no uncommitted changes, exit silently.
 # git status --porcelain is sub-millisecond on a clean tree.
-if [ -z "$(git -C "$CWD" status --porcelain -- "${KNOWLEDGE_VAULT:-.knowledge}" 2>/dev/null)" ]; then
+if [ -z "$(git -C "$VAULT_DIR" status --porcelain . 2>/dev/null)" ]; then
     exit 0
 fi
 
