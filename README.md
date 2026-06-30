@@ -34,6 +34,9 @@ Then in any project: `/knowledge:init` to scaffold a `.knowledge/` directory.
 **Skills:**
 - `knowledge:boot` — full boot sequence, restores session state after context compaction
 - `knowledge:save` — persist session state and journal a summary before exit
+- `knowledge:fast-save` — quick session checkpoint; persists learnings + session state, skips journal/index/vectorize (use before recycle or as a periodic snapshot)
+- `knowledge:checkpoint` — mechanical vault persistence: `journal.db` → `journal.sql`, git add/commit/push; no editorial work (safe to call from hooks and periodic triggers)
+- `knowledge:recycle` — save session state, then clear and re-boot in place (the lightweight alternative to handoff — same process, fresh context, vault as continuity)
 - `knowledge:init` — initialize a new `.knowledge/` vault in the current project
 - `knowledge:scan` — scan vault file headers to build a mental index
 - `knowledge:search` — keyword search across the vault
@@ -65,7 +68,15 @@ The vault holds the rule; the journal holds the intent behind it. So one discipl
 
 ## Configuration
 
-No required env vars. The vault defaults to `.knowledge/` in the current working directory. Override with `KNOWLEDGE_DIR` if needed.
+No required env vars. The vault defaults to `.knowledge/` in the current working directory. Override with `KNOWLEDGE_VAULT` if needed — an absolute path wins; a relative value resolves against the current working directory.
+
+### Enrichment hooks (UserPromptSubmit)
+
+Three hooks fire on every operator turn:
+
+- **`association-hook`** — always on. Produces a compact 5-line summary of vault associations for the prompt.
+- **`channel-enrichment`** — opt-in (see below). For channel-delivered prompts, produces a larger topic/sender-tuned enrichment block.
+- **`time-enrichment`** — always on. Injects the current local time (e.g. `Current local time: 2026-06-29 11:42 EDT (Sunday)`) so the agent doesn't have to shell out to `date` or rely on heartbeats for a time signal.
 
 ### Auto-memory bridge (`KNOWLEDGE_AUTO_MEMORY_BRIDGE`)
 
