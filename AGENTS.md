@@ -41,27 +41,27 @@ Triggers to watch for:
 - Stated preferences: "I prefer X", "always do Y", "never do Z"
 
 **Promote patterns to identity.** A single correction is a vault file. A
-correction the operator has given before is a value — add it to CLAUDE.md.
-CLAUDE.md is read on every session start; vault files require search to
+correction the operator has given before is a value — add it to AGENTS.md.
+AGENTS.md is read on every session start; vault files require search to
 surface. Instructions get skimmed; values get followed.
 
-**The pipeline:** operator feedback → vault file (immediate) → CLAUDE.md (if
+**The pipeline:** operator feedback → vault file (immediate) → AGENTS.md (if
 it's a recurring pattern). The plugin teaches the pipeline; each agent's
-CLAUDE.md carries the conviction.
+AGENTS.md carries the conviction.
 
 ## Two Contexts
 
 The knowledge plugin serves two contexts:
 
 ### Agent vaults (persistent agents like Brioche, Herald, Fondant)
-- CLAUDE.md in the project root defines identity
+- AGENTS.md in the project root defines identity
 - Journal records personal learnings, corrections, decisions
 - Session-state tracks continuity across compactions
 - Boot restores state after compaction
 - Save preserves state before exit
 
 ### Project knowledge bases (repos like fabrica-v3)
-- No identity — CLAUDE.md defines project rules, not agent personality
+- No identity — AGENTS.md defines project rules, not agent personality
 - Journal records project decisions: why conventions were adopted,
   architectural rationale, context behind rules
 - Session-state is per-worktree (ephemeral agents write theirs there)
@@ -87,7 +87,7 @@ with `KNOWLEDGE_VAULT` env var or `--vault` CLI arg on scripts).
 
 ### Key Principles
 - **Schema-agnostic** — the plugin doesn't enforce entry format. Each
-  project's CLAUDE.md defines its own conventions.
+  project's AGENTS.md defines its own conventions.
 - **Retrieval over curation** — vault grows unboundedly. Discovery is via
   enrichment (keyword + vector + association), not manual browsing.
 - **Two enrichment chances** — passive (UserPromptSubmit hook) and explicit
