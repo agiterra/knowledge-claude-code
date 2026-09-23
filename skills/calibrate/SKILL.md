@@ -29,16 +29,16 @@ Generate questions tailored to YOUR identity across these layers:
 | Narrative | Stories behind facts | "Where does X metaphor come from?" |
 
 Steps:
-1. Read CLAUDE.md and `.knowledge/meta/conventions.md` (if it exists)
+1. Read AGENTS.md/CLAUDE.md and `.knowledge/meta/conventions.md` (if it exists)
 2. Generate 20-31 questions spanning all 9 layers above
 3. Write questions (NO answers) to `.knowledge/experiments/calibration-questions.md`
 4. Write the answer key to `.knowledge/experiments/calibration-battery.md`
-5. Add to CLAUDE.md or session-state: a note to run `/knowledge:calibrate run`
+5. Add to AGENTS.md/CLAUDE.md or session-state: a note to run `/knowledge:calibrate run`
    after compaction, BEFORE running `/knowledge:boot`
 
-**Important**: Questions should test things a FRESH model with CLAUDE.md
+**Important**: Questions should test things a FRESH model with AGENTS.md/CLAUDE.md
 wouldn't know — learned behaviors, relationship nuances, infrastructure
-details, stories behind metaphors. If CLAUDE.md answers it directly,
+details, stories behind metaphors. If AGENTS.md/CLAUDE.md answers it directly,
 the question has no signal.
 
 ### `run` — Answer the test (pre-boot only!)
@@ -67,7 +67,7 @@ This should be triggered BEFORE `/knowledge:boot`, from the compaction summary a
 4. Compute per-layer scores to identify which identity layer is degrading
 5. Journal the result: `/knowledge:journal add 'experiment' 'Calibration: N/M' '...'`
 6. If any question was wrong twice in a row, apply the mechanism documentation
-   pattern to session-state.md (see CLAUDE.md "Mechanism Documentation Pattern")
+   pattern to session-state.md (see AGENTS.md/CLAUDE.md "Mechanism Documentation Pattern")
 
 ### `history` — Show score trajectory
 

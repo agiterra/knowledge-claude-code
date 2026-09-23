@@ -89,5 +89,5 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
 ## Important
 
 - If session state mentions infrastructure (webhooks, heartbeats), spin them up.
-- If you find yourself disoriented, re-read CLAUDE.md — that's your anchor.
-- See the plugin's Key Principles in CLAUDE.md for memory architecture rules.
+- If you find yourself disoriented, re-read AGENTS.md/CLAUDE.md — that's your anchor.
+- See the plugin's Key Principles in AGENTS.md/CLAUDE.md for memory architecture rules.

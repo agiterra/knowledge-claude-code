@@ -19,7 +19,7 @@ Two inputs feed this phase:
    ("yes exactly"), promises to remember, new facts about people / projects /
    infrastructure.
 
-For each lesson: decide where it belongs — CLAUDE.md for values, a feedback-*.md
+For each lesson: decide where it belongs — the project's instruction file — whichever of `AGENTS.md` / `CLAUDE.md` already exists (`AGENTS.md` if neither). **Never create the other one:** with both present, Claude Code loads ONLY `CLAUDE.md`, so a new file silently shadows (or is shadowed by) the old — for values, a feedback-*.md
 file for behavioral rules, project-*.md for project context, a new file for new
 knowledge. Write it to the proper location now.
 

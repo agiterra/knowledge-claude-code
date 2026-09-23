@@ -14,14 +14,14 @@ KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@ag
 The journal is the append-only record of WHY things are the way they are.
 
 For **persistent agents**, the journal records learnings, corrections, and
-decisions that shaped identity (defined in CLAUDE.md) and vault knowledge.
+decisions that shaped identity (defined in AGENTS.md/CLAUDE.md) and vault knowledge.
 
 For **project repos**, the journal records why conventions were adopted,
 architectural decisions, and rationale behind project knowledge. Any agent
 working in the repo can query the journal before changing a convention to
 understand the reasoning behind it.
 
-**Before modifying CLAUDE.md or any vault knowledge, search the journal first.**
+**Before modifying AGENTS.md/CLAUDE.md or any vault knowledge, search the journal first.**
 The journal may contain context about why something was written the way it was.
 
 ## Subcommands
@@ -51,7 +51,7 @@ Categories: `learning`, `correction`, `decision`, `experiment`, `conversation`
 - **tags**: Comma-separated keywords for filtering
 
 After adding, note the `j:N` ID. If this entry should be referenced from
-CLAUDE.md or a vault knowledge file, add the reference: `[j:N]`.
+AGENTS.md/CLAUDE.md or a vault knowledge file, add the reference: `[j:N]`.
 
 ### Vector Update
 
@@ -73,7 +73,7 @@ Uses SQLite FTS5 full-text search across summary, context, and tags.
 
 ### Look Up a Specific Entry
 
-When CLAUDE.md or a vault file references `[j:42]`, retrieve the full context:
+When AGENTS.md/CLAUDE.md or a vault file references `[j:42]`, retrieve the full context:
 
 ```
 Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
@@ -92,9 +92,9 @@ Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/no
 Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py by-tag identity")
 ```
 
-### Provenance Check (before modifying CLAUDE.md or vault knowledge)
+### Provenance Check (before modifying AGENTS.md/CLAUDE.md or vault knowledge)
 
-If CLAUDE.md or a vault file says `- Never block the main thread [j:3, j:7, j:19]`,
+If AGENTS.md/CLAUDE.md or a vault file says `- Never block the main thread [j:3, j:7, j:19]`,
 read all referenced entries before changing or removing that rule:
 
 ```
@@ -124,7 +124,7 @@ Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/no
 
 ## The Provenance Chain
 
-CLAUDE.md and vault knowledge files reference journal entries:
+AGENTS.md/CLAUDE.md and vault knowledge files reference journal entries:
 ```
 - Never block the main thread [j:3, j:7, j:19]
 - Adopted exhaustive switch pattern [j:45]

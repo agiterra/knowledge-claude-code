@@ -29,7 +29,7 @@ that test task continuity — NOT trivia. Good questions:
 
 Bad questions (avoid these — they test reference recall, not continuity):
 - "What port does X run on?" (trivia — enrichment handles this)
-- "What's your emoji?" (CLAUDE.md has this)
+- "What's your emoji?" (AGENTS.md/CLAUDE.md has this)
 - "How many journal entries do you have?" (session-state has this)
 
 The questions should require understanding of WHY work is happening, not just WHAT.
@@ -180,9 +180,9 @@ Use when you've already verified continuity through conversation.
   both crew and Wire. No suffix, no renaming. Crew disambiguates sessions by
   `cc_session_id` during the overlap window. After the outgoing session is
   stopped, there's one session again.
-- The twin boots from vault files only — same CLAUDE.md, session-state.md, conventions.md
+- The twin boots from vault files only — same AGENTS.md/CLAUDE.md, session-state.md, conventions.md
 - Enrichment (association search, vector search) is available to the twin during the quiz
-- The quiz tests task continuity, not identity (identity comes from CLAUDE.md)
+- The quiz tests task continuity, not identity (identity comes from AGENTS.md/CLAUDE.md)
 - Epistemic honesty > completeness. Flagging "I don't know" beats confabulating.
 - This is NOT a Turing test. The twin doesn't need to fool anyone. It needs to
   continue your work without losing context.
