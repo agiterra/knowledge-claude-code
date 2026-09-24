@@ -8,7 +8,7 @@ argument-hint: "<subcommand> [args]"
 
 **Scripts path**: The Python scripts live in the `knowledge-tools` plugin. Resolve the path with:
 ```
-KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
+KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1)
 ```
 
 The journal is the append-only record of WHY things are the way they are.
@@ -29,7 +29,7 @@ The journal may contain context about why something was written the way it was.
 ### Initialize (first time only)
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py init")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py init")
 ```
 
 ### Add an Entry
@@ -38,7 +38,7 @@ When you learn something, make a decision, get corrected, or have a significant
 conversation — journal it.
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py add '<category>' '<summary>' '<context>' --source '<who/what>' --tags '<comma,separated>'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py add '<category>' '<summary>' '<context>' --source '<who/what>' --tags '<comma,separated>'")
 ```
 
 Categories: `learning`, `correction`, `decision`, `experiment`, `conversation`
@@ -58,7 +58,7 @@ AGENTS.md/CLAUDE.md or a vault knowledge file, add the reference: `[j:N]`.
 After adding a journal entry, if vector embeddings are available, update:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/vectorize.py update --journal $ID")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/vectorize.py update --journal $ID")
 ```
 
 ### Search the Journal
@@ -66,7 +66,7 @@ Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/no
 Before changing core beliefs, search for prior context:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search '<query>'")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py search '<query>'")
 ```
 
 Uses SQLite FTS5 full-text search across summary, context, and tags.
@@ -76,20 +76,20 @@ Uses SQLite FTS5 full-text search across summary, context, and tags.
 When AGENTS.md/CLAUDE.md or a vault file references `[j:42]`, retrieve the full context:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 42")
 ```
 
 ### Recent Entries
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py recent 10")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py recent 10")
 ```
 
 ### Filter by Category or Tag
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py by-category correction")
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py by-tag identity")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py by-category correction")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py by-tag identity")
 ```
 
 ### Provenance Check (before modifying AGENTS.md/CLAUDE.md or vault knowledge)
@@ -98,15 +98,15 @@ If AGENTS.md/CLAUDE.md or a vault file says `- Never block the main thread [j:3,
 read all referenced entries before changing or removing that rule:
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 3")
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 7")
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 19")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 3")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 7")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py get 19")
 ```
 
 ### Stats
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py stats")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py stats")
 ```
 
 ## When to Journal
@@ -139,7 +139,7 @@ with references is knowledge.
 **Always use `backup` instead of `dump` for routine SQL export.**
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py backup")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py backup")
 ```
 
 `backup` dumps to a temp file, verifies the INSERT count and in-memory
@@ -153,7 +153,7 @@ status line and overwrites the real dump.
 ### Rebuild
 
 ```
-Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py rebuild")
+Bash(command="KNOWLEDGE_SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1) && python3 $KNOWLEDGE_SCRIPTS/journal.py rebuild")
 ```
 
 Rebuild validates the SQL file has entries before deleting the existing DB.

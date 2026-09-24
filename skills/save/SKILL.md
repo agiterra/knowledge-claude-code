@@ -58,7 +58,7 @@ Run `/knowledge:journal` with:
 Run `/knowledge:checkpoint` (or invoke its script directly) with a descriptive commit message:
 
 ```
-Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message 'Session save: [brief description]'")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message 'Session save: [brief description]'")
 ```
 
 Checkpoint handles the mechanics: `journal.py backup`, `git add`, `git commit` if changes, `git push` if origin exists. Idempotent — skips silently on no-op.
