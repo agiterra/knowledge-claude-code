@@ -18,7 +18,7 @@ fi
 VECTORS_DB="$VAULT_DIR/vectors.db"
 
 if [ ! -f "$VECTORS_DB" ] || [ ! -s "$VECTORS_DB" ]; then
-    SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1)
+    SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1)
     if [ -n "$SCRIPTS" ]; then
         cd "$CWD"
         python3 "$SCRIPTS/vectorize.py" --incremental 2>&1 | tail -3

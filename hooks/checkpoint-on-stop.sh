@@ -43,9 +43,14 @@ fi
 
 # Find checkpoint.sh in the plugin cache. Same resolver as session-end.sh.
 CHECKPOINT=""
-for d in ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts/checkpoint.sh; do
-    [ -f "$d" ] && CHECKPOINT="$d" && break
-done
+# Own plugin copy first (this hook's version), else the NEWEST cached version by VERSION order.
+# A bare glob loop took the lexically FIRST match: 0.7.13 before 0.7.18, and 0.7.9 after it (Herald 2026-09-24).
+d="$(dirname "$0")/../node_modules/@agiterra/knowledge-tools/scripts/checkpoint.sh"
+[ -f "$d" ] && CHECKPOINT="$d"
+if [ -z "$CHECKPOINT" ]; then
+    d=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts/checkpoint.sh 2>/dev/null | sort -V | tail -1)
+    [ -n "$d" ] && [ -f "$d" ] && CHECKPOINT="$d"
+fi
 
 if [ -z "$CHECKPOINT" ]; then
     # Fallback: sibling knowledge-tools checkout (local dev).

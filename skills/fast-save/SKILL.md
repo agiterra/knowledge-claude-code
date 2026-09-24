@@ -57,7 +57,7 @@ needs to DO.
 ### 3. Checkpoint
 
 ```
-Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message 'Fast save: [brief label]'")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message 'Fast save: [brief label]'")
 ```
 
 Checkpoint handles: `journal.py backup`, `git add`, commit if changes, push if origin set. Idempotent.

@@ -25,7 +25,7 @@ Nothing else. No conversation scan, no session-state edit, no learning extractio
 ## Invocation
 
 ```
-Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message \"[optional commit message]\"")
+Bash(command="SCRIPTS=$(ls -d ~/.claude/plugins/cache/*/knowledge/*/node_modules/@agiterra/knowledge-tools/scripts 2>/dev/null | sort -V | tail -1); bash \"$SCRIPTS/checkpoint.sh\" --cwd . --message \"[optional commit message]\"")
 ```
 
 Flags:
