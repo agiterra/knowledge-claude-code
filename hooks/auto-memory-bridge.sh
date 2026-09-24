@@ -64,29 +64,16 @@ trap 'rm -f "$TMP"' EXIT
 } >> "$TMP"
 
 # ── Standing operator preferences (existing hand-written memory files) ────
-PREF_FILES="$(find "$MEMORY_DIR" -maxdepth 1 -type f -name '*.md' \
-    ! -name 'MEMORY.md' 2>/dev/null | sort)"
-if [ -n "$PREF_FILES" ]; then
-    echo "## Standing operator preferences (pre-boot)" >> "$TMP"
-    echo >> "$TMP"
-    while IFS= read -r f; do
-        base="$(basename "$f")"
-        # Read description from frontmatter if present, else first non-frontmatter line
-        desc="$(awk '/^description: /{sub(/^description: /,""); print; exit}' "$f")"
-        if [ -z "$desc" ]; then
-            desc="$(awk '/^---$/{c++; next} c>=2 && NF{print; exit}' "$f")"
-        fi
-        # Strip surrounding double-quotes that the CC harness adds when normalizing
-        desc="${desc#\"}"
-        desc="${desc%\"}"
-        # Truncate long descriptions
-        if [ "${#desc}" -gt 140 ]; then
-            desc="${desc:0:137}..."
-        fi
-        echo "- [${base%.md}](${base}) — ${desc}" >> "$TMP"
-    done <<< "$PREF_FILES"
-    echo >> "$TMP"
-fi
+# Rendered LAST (below), once the other sections' size is known: the loader truncates MEMORY.md at
+# ~24.4 KB AND 200 lines — two dimensions, both enforced here (Brioche 628672: a 191-entry index was
+# 48.6 KB and lost 91 lines at every boot). Newest memories first; overflow is named, never silent.
+MAX_BYTES="${KNOWLEDGE_AUTO_MEMORY_MAX_BYTES:-22000}"
+MAX_LINES="${KNOWLEDGE_AUTO_MEMORY_MAX_LINES:-180}"
+PREFS_TMP="$(mktemp)"
+TAIL_TMP="$(mktemp)"
+trap 'rm -f "$TMP" "$PREFS_TMP" "$TAIL_TMP"' EXIT
+HEAD_TMP="$TMP"
+TMP="$TAIL_TMP"
 
 # ── Recent journal entries ────────────────────────────────────────────────
 if [ -f "$JOURNAL_DB" ]; then
@@ -121,8 +108,44 @@ fi
     echo "- Vectors DB: \`${VAULT_DIR}/vectors.db\` (regenerable from markdown via \`vectorize.py\`)"
 } >> "$TMP"
 
-# Atomic install
-mv "$TMP" "$MEMORY_FILE"
+# ── Render the preference index into whatever budget the other sections left ──
+used_bytes=$(cat "$HEAD_TMP" "$TAIL_TMP" | wc -c | tr -d ' ')
+used_lines=$(cat "$HEAD_TMP" "$TAIL_TMP" | wc -l | tr -d ' ')
+python3 - "$MEMORY_DIR" "$((MAX_BYTES - used_bytes))" "$((MAX_LINES - used_lines))" > "$PREFS_TMP" <<'PY'
+import os, re, sys
+mdir, byte_budget, line_budget = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+TITLE_MAX, LINE_MAX = 48, 160
+def desc_of(path):
+    txt = open(path, encoding="utf-8", errors="replace").read()
+    m = re.search(r"^description:\s*(.*)$", txt, re.M)
+    if m: d = m.group(1).strip()
+    else:
+        body = re.split(r"^---\s*$", txt, maxsplit=2, flags=re.M)
+        d = next((l.strip() for l in (body[-1] if len(body) > 2 else txt).splitlines() if l.strip()), "")
+    return d.strip('"').strip()
+def clip(s, n): return s if len(s) <= n else s[: n - 1].rstrip() + "…"
+files = [f for f in os.listdir(mdir) if f.endswith(".md") and f != "MEMORY.md" and os.path.isfile(os.path.join(mdir, f))]
+files.sort(key=lambda f: os.path.getmtime(os.path.join(mdir, f)), reverse=True)   # newest first
+if not files: sys.exit(0)
+out = ["## Standing operator preferences (pre-boot)", ""]
+spent = sum(len((l + "\n").encode()) for l in out) ; lines = len(out)
+# room for the overflow note, sized from its real text (it carries the directory path)
+reserve = len(f"- … {len(files)} older memories not listed (index budget {byte_budget} B / {line_budget} lines); all are in {mdir}\n".encode()) + 2
+kept = 0
+for f in files:
+    title = clip(f[:-3], TITLE_MAX)
+    prefix = f"- [{title}]({f}) — "
+    line = prefix + clip(desc_of(os.path.join(mdir, f)), max(24, LINE_MAX - len(prefix)))
+    b = len((line + "\n").encode())
+    if spent + b + reserve > byte_budget or lines + 3 > line_budget: break   # +1 this line, +1 note, +1 blank
+    out.append(line); spent += b; lines += 1; kept += 1
+if kept < len(files):
+    out.append(f"- … {len(files) - kept} older memories not listed (index budget {byte_budget} B / {line_budget} lines); all are in {mdir}")
+out.append("")
+print("\n".join(out))
+PY
+cat "$HEAD_TMP" "$PREFS_TMP" "$TAIL_TMP" > "$MEMORY_FILE.tmp.$$" && mv "$MEMORY_FILE.tmp.$$" "$MEMORY_FILE"
+rm -f "$HEAD_TMP" "$PREFS_TMP" "$TAIL_TMP"
 trap - EXIT
 
-echo "[knowledge] auto-memory MEMORY.md regenerated from vault"
+echo "[knowledge] auto-memory MEMORY.md regenerated from vault: $(wc -c < "$MEMORY_FILE" | tr -d ' ') B, $(wc -l < "$MEMORY_FILE" | tr -d ' ') lines (budget ${MAX_BYTES} B / ${MAX_LINES} lines)"
