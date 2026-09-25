@@ -68,7 +68,7 @@ trap 'rm -f "$TMP"' EXIT
 # ~24.4 KB AND 200 lines — two dimensions, both enforced here (Brioche 628672: a 191-entry index was
 # 48.6 KB and lost 91 lines at every boot). Newest memories first; overflow is named, never silent.
 MAX_BYTES="${KNOWLEDGE_AUTO_MEMORY_MAX_BYTES:-22000}"
-MAX_LINES="${KNOWLEDGE_AUTO_MEMORY_MAX_LINES:-180}"
+MAX_LINES="${KNOWLEDGE_AUTO_MEMORY_MAX_LINES:-190}"
 PREFS_TMP="$(mktemp)"
 TAIL_TMP="$(mktemp)"
 trap 'rm -f "$TMP" "$PREFS_TMP" "$TAIL_TMP"' EXIT
@@ -124,23 +124,34 @@ def desc_of(path):
         d = next((l.strip() for l in (body[-1] if len(body) > 2 else txt).splitlines() if l.strip()), "")
     return d.strip('"').strip()
 def clip(s, n): return s if len(s) <= n else s[: n - 1].rstrip() + "…"
-files = [f for f in os.listdir(mdir) if f.endswith(".md") and f != "MEMORY.md" and os.path.isfile(os.path.join(mdir, f))]
+MORE = "MEMORY-more.md"   # overflow index: not loaded at start, linked once from MEMORY.md (Brioche 629587)
+files = [f for f in os.listdir(mdir) if f.endswith(".md") and f not in ("MEMORY.md", MORE) and os.path.isfile(os.path.join(mdir, f))]
 files.sort(key=lambda f: os.path.getmtime(os.path.join(mdir, f)), reverse=True)   # newest first
 if not files: sys.exit(0)
 out = ["## Standing operator preferences (pre-boot)", ""]
 spent = sum(len((l + "\n").encode()) for l in out) ; lines = len(out)
 # room for the overflow note, sized from its real text (it carries the directory path)
-reserve = len(f"- … {len(files)} older memories not listed (index budget {byte_budget} B / {line_budget} lines); all are in {mdir}\n".encode()) + 2
+reserve = len(f"- … {len(files)} older memories: [{MORE}]({MORE})\n".encode()) + 2
 kept = 0
+overflow = []
 for f in files:
-    title = clip(f[:-3], TITLE_MAX)
-    prefix = f"- [{title}]({f}) — "
-    line = prefix + clip(desc_of(os.path.join(mdir, f)), max(24, LINE_MAX - len(prefix)))
+    # One short link per memory: the link TEXT is the memory's own description hook (<=48 chars); the stem is already
+    # the link TARGET, so repeating it and a body excerpt only doubled every line (Brioche 629587: 191 lines at 26.9 KB).
+    d = desc_of(os.path.join(mdir, f))
+    line = f"- [{clip(d or f[:-3], TITLE_MAX)}]({f})"
     b = len((line + "\n").encode())
-    if spent + b + reserve > byte_budget or lines + 3 > line_budget: break   # +1 this line, +1 note, +1 blank
+    if overflow or spent + b + reserve > byte_budget or lines + 3 > line_budget:   # +1 this line, +1 note, +1 blank
+        overflow.append(f"- [{f[:-3]}]({f}) — {d}"); continue
     out.append(line); spent += b; lines += 1; kept += 1
-if kept < len(files):
-    out.append(f"- … {len(files) - kept} older memories not listed (index budget {byte_budget} B / {line_budget} lines); all are in {mdir}")
+more_path = os.path.join(mdir, MORE)
+if overflow:
+    out.append(f"- … {len(overflow)} older memories: [{MORE}]({MORE})")
+    with open(more_path + ".tmp", "w") as fh:
+        fh.write("<!-- AUTO-GENERATED overflow of MEMORY.md by knowledge-claude-code/auto-memory-bridge; not loaded at session start. -->\n\n")
+        fh.write("\n".join(overflow) + "\n")
+    os.replace(more_path + ".tmp", more_path)
+elif os.path.exists(more_path):
+    os.remove(more_path)   # everything fits again: no stale overflow list
 out.append("")
 print("\n".join(out))
 PY
