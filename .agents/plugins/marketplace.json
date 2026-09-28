@@ -1,0 +1,6 @@
+{
+  "name": "agiterra-knowledge",
+  "plugins": [
+    { "name": "knowledge", "source": { "source": "local", "path": "./" } }
+  ]
+}
