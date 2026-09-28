@@ -25,6 +25,26 @@ Or manually:
 
 Then in any project: `/knowledge:init` to scaffold a `.knowledge/` directory.
 
+### Codex and Grok
+
+The same plugin runs under Codex and Grok (directly or behind an ACP adapter such as
+`codex-acp` / `grok agent stdio`). Skills load as-is. Hooks need one install step per
+harness, run from the installed copy of the plugin:
+
+```
+# Codex: install, then trust the hooks (Codex silently skips untrusted hooks).
+codex plugin marketplace add agiterra/knowledge-claude-code
+codex plugin add knowledge@agiterra-knowledge
+bun <installed plugin root>/scripts/harness-install.ts codex --cwd <project>
+
+# Grok: plugin-bundled hooks never fire, so write them to $GROK_HOME/hooks/knowledge.json.
+bun <plugin root>/scripts/harness-install.ts grok
+```
+
+Re-run the Codex step after every plugin update (a changed hook is untrusted again).
+Known limit on Grok: it discards a `UserPromptSubmit` hook's output, so per-prompt
+vault associations do not reach the model from a hook.
+
 ### Prerequisites
 - Python 3.10+ (vector + index scripts)
 - Bun (https://bun.sh)
