@@ -70,7 +70,7 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
    ```
 2. **Verify Wire heartbeats are still firing** (not just registered). Registration is persistent; a cron scheduler crash leaves you silently starving for pokes. Use the wire plugin's MCP tool — the raw `/heartbeats` endpoint requires a Bearer JWT, so an unauthenticated curl gets an auth-error object, chokes iterating it, and reports "no heartbeats" no matter the truth (a silent false-negative):
    ```
-   mcp__plugin_wire_wire__heartbeat_list({ agent_id: "<your AGENT_ID>" })
+   mcp__plugin_wire_wire__heartbeat_list({ agent_id: "<your AGENT_ID>", summary: true })
    ```
    Compare each heartbeat's `last_fired` against its `cron` interval. Anything that never fired or is stale beyond its interval is broken — flag it and consider re-creating it with `heartbeat_create`. An empty list means none are registered — fine if your role doesn't use periodic self-wakeups; flag it if session state says you should have one.
 3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project. The sidecar is keyed by cwd hash; if the process died, vault writes will silently NOT be indexed. (The not-registered case must print explicitly — a pipe into `xargs -I{}` runs nothing on empty input, so the old form printed nothing exactly when the sidecar was missing entirely.)
