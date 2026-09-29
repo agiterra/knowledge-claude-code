@@ -67,8 +67,19 @@ trap 'rm -f "$TMP"' EXIT
 # Rendered LAST (below), once the other sections' size is known: the loader truncates MEMORY.md at
 # ~24.4 KB AND 200 lines — two dimensions, both enforced here (Brioche 628672: a 191-entry index was
 # 48.6 KB and lost 91 lines at every boot). Newest memories first; overflow is named, never silent.
-MAX_BYTES="${KNOWLEDGE_AUTO_MEMORY_MAX_BYTES:-22000}"
-MAX_LINES="${KNOWLEDGE_AUTO_MEMORY_MAX_LINES:-190}"
+# Budget, per project (Brioche 642091: a persona can want a SMALLER MEMORY.md, because every byte loads into
+# every turn and vault search covers the rest). Precedence: env > the vault's config.json
+# {"auto_memory": {"max_bytes": N, "max_lines": N}} > the loader-safe defaults. A config value above the
+# default is clamped to it (the loader's truncation limits do not move); a non-integer is ignored, loudly.
+cfg_int() { # cfg_int <key> <default>
+    local v
+    v=$(jq -r --arg k "$1" '.auto_memory[$k] // empty' "${VAULT_DIR}/config.json" 2>/dev/null) || v=""
+    if [ -z "$v" ]; then echo "$2"
+    elif [[ "$v" =~ ^[0-9]+$ ]] && [ "$v" -gt 0 ]; then [ "$v" -lt "$2" ] && echo "$v" || echo "$2"
+    else echo "auto-memory-bridge: ignoring auto_memory.$1='$v' in ${VAULT_DIR}/config.json (want a positive integer)" >&2; echo "$2"; fi
+}
+MAX_BYTES="${KNOWLEDGE_AUTO_MEMORY_MAX_BYTES:-$(cfg_int max_bytes 22000)}"
+MAX_LINES="${KNOWLEDGE_AUTO_MEMORY_MAX_LINES:-$(cfg_int max_lines 190)}"
 PREFS_TMP="$(mktemp)"
 TAIL_TMP="$(mktemp)"
 trap 'rm -f "$TMP" "$PREFS_TMP" "$TAIL_TMP"' EXIT

@@ -111,6 +111,11 @@ The `auto-memory-bridge` SessionStart hook makes auto-memory a **derived view of
 
 Opt out per-session: `KNOWLEDGE_AUTO_MEMORY_BRIDGE=0`
 
+Budget: the loader truncates `MEMORY.md` at ~24.4 KB / 200 lines, so the bridge defaults to 22,000 B / 190 lines and moves
+the overflow into `MEMORY-more.md` (linked, not loaded). A project can ask for LESS, because every byte loads on every turn, in
+its vault's `config.json`: `{"auto_memory": {"max_bytes": 8000, "max_lines": 60}}`. Env `KNOWLEDGE_AUTO_MEMORY_MAX_BYTES` /
+`KNOWLEDGE_AUTO_MEMORY_MAX_LINES` override it; values above the defaults are clamped to them.
+
 ### Inbound channel enrichment
 
 Agents spawned via crew that should auto-enrich incoming IPC messages with vault context can opt in by setting `KNOWLEDGE_ENRICH_RULES` in their launch env. The knowledge plugin's `channel-enrichment` UserPromptSubmit hook parses this var and, on each channel-delivered prompt, looks up vault associations for the message `payload.text` and injects them into the receiver's context.
