@@ -73,11 +73,20 @@ Run `/knowledge:scan` to get a table of contents of archival memory files withou
    mcp__plugin_wire_wire__heartbeat_list({ agent_id: "<your AGENT_ID>", summary: true })
    ```
    Compare each heartbeat's `last_fired` against its `cron` interval. Anything that never fired or is stale beyond its interval is broken — flag it and consider re-creating it with `heartbeat_create`. An empty list means none are registered — fine if your role doesn't use periodic self-wakeups; flag it if session state says you should have one.
-3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project. The sidecar is keyed by cwd hash; if the process died, vault writes will silently NOT be indexed. (The not-registered case must print explicitly — a pipe into `xargs -I{}` runs nothing on empty input, so the old form printed nothing exactly when the sidecar was missing entirely.)
+3. **Verify the knowledge-indexer sidecar (KX) is alive** for the current project, and whether a host sweep covers the vault. The sidecar is keyed by cwd hash; if it died, vault writes will silently NOT be indexed.
+   A missing crews.db row is NOT a dead sidecar: sidecar launches never self-register, and the crew reaper drops unregistered rows. So the check falls back to the live screen `wire-kx-<hash>` (measured 2026-09-30: every persona's sidecar alive, none with a row, and boot reported all of them NOT REGISTERED). Codex and Grok personas never fire the Claude indexing hook, so their coverage is the host `kx-sweep` job when one exists; its last line for this vault is printed too. Every branch prints; an empty result would be read as healthy.
+   ```bash
+   cwd="$(pwd)"; id="kx-$(printf %s "$cwd" | shasum -a 256 | cut -c1-8)"
+   pid=$(sqlite3 ~/.wire/crews.db "SELECT screen_pid FROM agents WHERE id='$id'" 2>/dev/null)
+   scr=$(pgrep -f "dmS wire-$id " 2>/dev/null | head -1)
+   if [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1; then echo "KX $id alive (registered, pid $pid)"
+   elif [ -n "$scr" ]; then echo "KX $id alive (screen wire-$id, pid $scr) — no crews.db row; sidecars do not self-register, so this is NOT a failure"
+   elif [ -n "$pid" ]; then echo "KX $id DEAD (stale pid $pid, no screen wire-$id) — indexing is stalled; call knowledge-indexer launch()"
+   else echo "KX $id NOT RUNNING (no crews.db row, no screen wire-$id)"; fi
+   log=/opt/agiterra/watch/state/kx-sweep.log; tag="$(id -un)@$(basename "$cwd")"
+   if [ -r "$log" ]; then line=$(grep -F "$tag: scan" "$log" | tail -1); echo "kx-sweep: ${line:-no line for $tag — this vault is NOT covered by the host sweep}"; fi
    ```
-   Bash(command="cwd=\"$(pwd)\"; id=\"kx-$(echo -n \"$cwd\" | shasum -a 256 | cut -c1-8)\"; pid=$(sqlite3 ~/.wire/crews.db \"SELECT screen_pid FROM agents WHERE id='$id'\" 2>/dev/null); if [ -z \"$pid\" ]; then echo \"KX $id NOT REGISTERED — knowledge-indexer isn't installed for this project, or the sidecar was never launched\"; elif ps -p \"$pid\" >/dev/null 2>&1; then echo \"KX $id alive (pid $pid)\"; else echo \"KX $id DEAD (stale pid $pid) — indexing is stalled; call knowledge-indexer launch()\"; fi")
-   ```
-   NOT REGISTERED is fine when the knowledge-indexer plugin isn't installed for this project (indexing rides the boot/save flows instead); flag it if the project normally runs one.
+   Read it as: `alive (registered …)` or `alive (screen …)` = fine. `DEAD` = call knowledge-indexer `launch()`. `NOT RUNNING` = fine only when the knowledge-indexer plugin isn't installed for this project, or when the kx-sweep line is fresh (its timestamp within about an hour) with `needs=0`. A kx-sweep line saying `NOT covered` while the sidecar is also NOT RUNNING means nothing indexes this vault: flag it.
 4. Check for any pending events or messages relevant to your role.
 
 ## Phase 5: Resume Work
