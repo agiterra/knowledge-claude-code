@@ -10,6 +10,13 @@ Run this after context compaction to restore continuity.
 ## Phase 1: Core State (always read)
 
 1. Read `.knowledge/meta/session-state.md` — what you were doing before compaction. If it doesn't exist, tell the user to run `/knowledge:init`.
+2. **Read `## HUMAN DIRECTIONS IN FORCE` first, and act on it first.** It is the first section of the file under the
+   session-state contract (`/knowledge:fast-save` step 1). Every direction there outranks every hold below it,
+   including holds your predecessor wrote. An Urgent item that says `lane running: no` is the work, not a note.
+   If the section is missing, say so in your first report: a missing section looks exactly like a dropped one.
+   Then do two things: reconstruct the directions from the recovery data or the journal, and ask your operator for
+   any you can't recover. Check `## OPEN ASKS & AWAITED DECISIONS` and `## HOLDS` next. A hold with no why / until /
+   lifted-by is suspect; re-judge it, don't just obey it.
 
 ## Phase 1.5: Recovery Data (if available)
 

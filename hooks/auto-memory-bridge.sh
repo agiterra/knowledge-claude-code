@@ -63,6 +63,34 @@ trap 'rm -f "$TMP"' EXIT
     echo
 } >> "$TMP"
 
+# ── Human directions in force (session-state contract, fast-save step 1) ──
+# The operator, 2026-10-01: "If you're following directions from a human, those directions need to carry."
+# MEMORY.md loads before /knowledge:boot runs, so a direction copied here reaches a session even when boot is
+# skipped or cut short. It goes in the HEAD, which the budgeter always keeps. Capped at 40 lines / 4 KB so it
+# cannot starve the index; a cut is marked, never silent.
+if [ -f "$SESSION_STATE" ] && grep -q '^## HUMAN DIRECTIONS IN FORCE' "$SESSION_STATE"; then
+    DIR_TMP="$(mktemp)"
+    awk '/^## HUMAN DIRECTIONS IN FORCE/ { p=1; next } /^## / { if (p) exit } p' "$SESSION_STATE" > "$DIR_TMP"
+    dir_lines=$(wc -l < "$DIR_TMP" | tr -d ' ')
+    {
+        echo "## HUMAN DIRECTIONS IN FORCE — from session-state.md; they outrank every agent-made hold"
+        head -40 "$DIR_TMP" | head -c 4096
+        if [ "$dir_lines" -gt 40 ] || [ "$(head -40 "$DIR_TMP" | wc -c | tr -d ' ')" -gt 4096 ]; then
+            echo
+            echo "… TRUNCATED ($dir_lines lines): read the full section in \`${SESSION_STATE}\`"
+        fi
+        echo
+    } >> "$TMP"
+    rm -f "$DIR_TMP"
+elif [ -f "$SESSION_STATE" ]; then
+    # Silence here would read as "no directions"; a dropped section looks exactly like an empty one. Say which it is.
+    {
+        echo "## HUMAN DIRECTIONS IN FORCE — MISSING from session-state.md"
+        echo "Not written under the session-state contract (\`/knowledge:fast-save\` step 1). A dropped direction looks exactly like this: check the journal and ask the operator."
+        echo
+    } >> "$TMP"
+fi
+
 # ── Standing operator preferences (existing hand-written memory files) ────
 # Rendered LAST (below), once the other sections' size is known: the loader truncates MEMORY.md at
 # ~24.4 KB AND 200 lines — two dimensions, both enforced here (Brioche 628672: a 191-entry index was

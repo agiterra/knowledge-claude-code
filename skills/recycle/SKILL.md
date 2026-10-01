@@ -34,6 +34,32 @@ Skill(skill="knowledge:fast-save")
 Wait for it to complete. Verify session-state.md was updated and committed.
 **Do NOT proceed to Phase 2 until fast-save has run and succeeded.**
 
+**The state you are about to recycle into must carry everything that matters — or there is no point in
+recycling** (the operator, 2026-10-01). The successor knows ONLY what that file says. In particular, the
+session-state contract (canonical text: fast-save step 1) requires:
+
+- **`## HUMAN DIRECTIONS IN FORCE` is the first section.** Every standing operator direction, verbatim and dated.
+  Urgent items go first, each with the state it demands (`lane running: yes (id)` / `no (why; restart time)`).
+  **Urgent overrides every hold.** A successor that inherits your holds but not the human direction will obey the hold.
+- **`## OPEN ASKS & AWAITED DECISIONS`** — every open ask and every decision you are waiting on.
+- **`## HOLDS`** — every hold with why / until / lifted-by. A hold missing one of the three does not carry.
+- **Pointers, not narrative; at most 15 KB.**
+
+A recycle that drops a human direction or an Urgent item is a **failed recycle**, even if the boot succeeds.
+
+**Gate: run fast-save's contract check now. Proceed to Phase 2 only on `CONTRACT OK`:**
+
+```
+Bash(command="f=.knowledge/meta/session-state.md; h=$(grep -m1 '^## ' \"$f\"); n=$(wc -c < \"$f\" | tr -d ' '); miss=''; grep -q '^## OPEN ASKS & AWAITED DECISIONS' \"$f\" || miss=\"$miss asks\"; grep -q '^## HOLDS' \"$f\" || miss=\"$miss holds\"; if [ \"$h\" = '## HUMAN DIRECTIONS IN FORCE' ] && [ \"$n\" -le 15360 ] && [ -z \"$miss\" ]; then echo \"CONTRACT OK ($n B)\"; else echo \"CONTRACT FAIL: first section '${h:-none}', size $n B (limit 15360), missing:${miss:- nothing}\"; fi")
+```
+
+On `CONTRACT FAIL`: fix session-state.md, re-checkpoint, and re-run the check. Do not clear your context first.
+
+**Recycle trigger.** Recycle at the next clean stopping point once context passes **40% of your runtime's own
+window**: 400k on a 1M Claude window, about 103k on Codex (about 258k window). Grok uses a 75% floor, because a Grok session
+already boots at about 117k. This is never a hard abort. (Raised from 20% on 2026-10-01: a 20% line sat below a
+successor's own boot size, so every session recycled again within a few turns.)
+
 If you skip this step, the next-you boots into stale state. Recycle's entire
 purpose is preserving context for the fresh window — fast-save IS the
 preservation. Skipping it is exactly the bug this skill was fixed to prevent
