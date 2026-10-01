@@ -34,6 +34,11 @@ A promise to remember without a file write is a lie.
 
 Read `.knowledge/meta/session-state.md` and update it:
 
+0. **Apply the session-state contract FIRST** (canonical text: `/knowledge:fast-save` step 1). The file opens with
+   `## HUMAN DIRECTIONS IN FORCE` (every standing operator direction, verbatim and dated, Urgent first, each with the
+   state it demands; these outrank every hold an agent invented), then `## OPEN ASKS & AWAITED DECISIONS`, then
+   `## HOLDS` (each with why / until / lifted-by). Write pointers, not narrative, and keep it to at most 15 KB. A save that drops a human
+   direction or an Urgent item is a failed save.
 1. **Move completed work** from Active Work to the History section (or to
    `.knowledge/meta/session-history.md` if the history section is getting long)
 2. **Update active work** with current status, specific file paths, line numbers,
@@ -42,8 +47,12 @@ Read `.knowledge/meta/session-state.md` and update it:
    was made, what was tried and failed, what the next step should be
 4. **Update the timestamp** to today's date with a short label
 
-Keep session-state.md under 80 lines. It's read on every boot — bloat here
-costs tokens on every future session.
+Keep session-state.md within 15 KB. It's read on every boot, and bloat here
+costs tokens on every future session. Then run the contract check and fix the file until it prints `CONTRACT OK`:
+
+```
+Bash(command="f=.knowledge/meta/session-state.md; h=$(grep -m1 '^## ' \"$f\"); n=$(wc -c < \"$f\" | tr -d ' '); miss=''; grep -q '^## OPEN ASKS & AWAITED DECISIONS' \"$f\" || miss=\"$miss asks\"; grep -q '^## HOLDS' \"$f\" || miss=\"$miss holds\"; if [ \"$h\" = '## HUMAN DIRECTIONS IN FORCE' ] && [ \"$n\" -le 15360 ] && [ -z \"$miss\" ]; then echo \"CONTRACT OK ($n B)\"; else echo \"CONTRACT FAIL: first section '${h:-none}', size $n B (limit 15360), missing:${miss:- nothing}\"; fi")
+```
 
 ## Phase 3: Journal Session Summary
 
