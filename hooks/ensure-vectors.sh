@@ -10,6 +10,12 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 # Vault via the shared knowledge-tools primitive (absolute KNOWLEDGE_VAULT wins; else $CWD/.knowledge).
 __RV="$(dirname "$0")/../node_modules/@agiterra/knowledge-tools/scripts/resolve-vault.sh"
 if [ -f "$__RV" ]; then . "$__RV"; else VAULT_DIR="${KNOWLEDGE_VAULT:-.knowledge}"; case "$VAULT_DIR" in /*) :;; *) VAULT_DIR="$CWD/$VAULT_DIR";; esac; fi
+# A shared checkout reached only via cwd (KNOWLEDGE_VAULT unset) is never written — not even this hook's own
+# log (2026-10-02, Brioche 649049; predicate from knowledge-tools >= 0.2.14, absent on the fallback path).
+if type vault_is_implicit_shared_root >/dev/null 2>&1 && vault_is_implicit_shared_root; then
+    echo "ensure-vectors: $VAULT_DIR is a SHARED root's vault reached via cwd (KNOWLEDGE_VAULT unset) — not writing" >&2
+    exit 0
+fi
 
 if [ ! -d "$VAULT_DIR" ]; then
     exit 0
