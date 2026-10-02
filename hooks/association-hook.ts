@@ -7,11 +7,40 @@
  * Designed to be fast (<500ms). If search fails or returns nothing, outputs
  * nothing (empty stdout = no context injection).
  *
+ * WHEN IT FIRES (Brioche ruling 2026-10-02 21:47Z, Wire 653413): only on a human prompt or a Wire
+ * heartbeat. UserPromptSubmit also fires for every Wire channel event and every background-task
+ * notification; each of those carried ~870 chars of associations into the context for good
+ * (Baguette #76: 20 fires = 17k chars of 293k growth). Those prompts now get nothing.
+ * HOW MUCH: the whole output is capped at MAX_CHARS (300).
+ *
  * Stdin: {"prompt": "...", "session_id": "...", "cwd": "...", ...}
  * Stdout: plain text context (added to Claude's view) or nothing
  */
 
 import { searchAssociations } from "@agiterra/knowledge-tools";
+
+export const MAX_CHARS = 300;
+
+/** True for a human prompt or a Wire heartbeat; false for any other channel event or a task notification. */
+export function shouldAssociate(prompt: string): boolean {
+  if (!prompt || prompt.length < 10) return false;
+  if (prompt.includes("<task-notification>")) return false;
+  const tags = prompt.match(/<channel\b[^>]*>/g);
+  if (!tags) return true;
+  return tags.some((t) => /\btopic="heartbeat"/.test(t));
+}
+
+/** Header plus as many lines as fit, the whole block <= max chars (newlines included). Empty when no line fits. */
+export function capBlock(header: string, lines: string[], max = MAX_CHARS): string {
+  let out = header;
+  let n = 0;
+  for (const l of lines) {
+    if (out.length + 1 + l.length > max) break;
+    out += "\n" + l;
+    n++;
+  }
+  return n > 0 ? out : "";
+}
 
 async function main() {
   let hookInput: { prompt?: string };
@@ -23,7 +52,7 @@ async function main() {
   }
 
   const prompt = hookInput.prompt ?? "";
-  if (!prompt || prompt.length < 10) process.exit(0);
+  if (!shouldAssociate(prompt)) process.exit(0);
 
   try {
     const result = await searchAssociations(prompt, { topK: 8, vectorLimit: 5 });
@@ -38,17 +67,14 @@ async function main() {
       seen.add(a.source);
       if (a.score < 0.1) continue;
 
-      const summary = a.summary.slice(0, 120);
+      const summary = a.summary.slice(0, 80);
       const tag = a.search_method === "vector" ? "vec" : "kw";
       const score = a.score.toFixed(2);
-      lines.push(`  [${tag} ${score}] ${a.source}: ${summary}`);
+      lines.push(`[${tag} ${score}] ${a.source}: ${summary}`);
     }
 
-    if (lines.length > 0) {
-      const elapsed = Math.round(result.timing_ms);
-      console.log(`[Associations (${elapsed}ms)]`);
-      console.log(lines.join("\n"));
-    }
+    const block = capBlock(`[Associations (${Math.round(result.timing_ms)}ms)]`, lines);
+    if (block) console.log(block);
   } catch (e) {
     console.error(`[assoc-hook] error: ${e}`);
   }
@@ -56,4 +82,4 @@ async function main() {
   process.exit(0);
 }
 
-main();
+if (import.meta.main) main();
