@@ -12,6 +12,10 @@
  * notification; each of those carried ~870 chars of associations into the context for good
  * (Baguette #76: 20 fires = 17k chars of 293k growth). Those prompts now get nothing.
  * HOW MUCH: the whole output is capped at MAX_CHARS (300).
+ * SLACK (Tim 2026-10-13 16:55Z, via Brioche 712365): human prompts arrive from Slack too. A topic="slack"
+ * channel event fires when its event is from a human (client_msg_id present, no bot_id), and the search
+ * runs on event.text ONLY. The whole body would match on headers, tokens and blocks. Bot posts and CI
+ * cards stay out.
  *
  * Stdin: {"prompt": "...", "session_id": "...", "cwd": "...", ...}
  * Stdout: plain text context (added to Claude's view) or nothing
@@ -21,13 +25,43 @@ import { searchAssociations } from "@agiterra/knowledge-tools";
 
 export const MAX_CHARS = 300;
 
-/** True for a human prompt or a Wire heartbeat; false for any other channel event or a task notification. */
-export function shouldAssociate(prompt: string): boolean {
-  if (!prompt || prompt.length < 10) return false;
-  if (prompt.includes("<task-notification>")) return false;
+const MIN_QUERY = 10;
+
+/** event.text of a Slack channel body when a human wrote it; null for a bot post, a CI card or an unparseable body. */
+export function humanSlackText(body: string): string | null {
+  let ev: { client_msg_id?: unknown; bot_id?: unknown; text?: unknown } | undefined;
+  try {
+    ev = JSON.parse(body)?.payload?.event;
+  } catch {
+    return null;
+  }
+  if (!ev || !ev.client_msg_id || ev.bot_id) return null;
+  return typeof ev.text === "string" && ev.text.trim() ? ev.text.trim() : null;
+}
+
+/**
+ * The text to search, or null when this prompt gets no associations.
+ * Human prompt or Wire heartbeat: the whole prompt. Human Slack message: its event.text only.
+ * Any other channel event or a task notification: null.
+ */
+export function associationQuery(prompt: string): string | null {
+  if (!prompt || prompt.length < MIN_QUERY) return null;
+  if (prompt.includes("<task-notification>")) return null;
   const tags = prompt.match(/<channel\b[^>]*>/g);
-  if (!tags) return true;
-  return tags.some((t) => /\btopic="heartbeat"/.test(t));
+  if (!tags) return prompt;
+  if (tags.some((t) => /\btopic="heartbeat"/.test(t))) return prompt;
+  const texts: string[] = [];
+  for (const m of prompt.matchAll(/<channel\b[^>]*\btopic="slack"[^>]*>([\s\S]*?)<\/channel>/g)) {
+    const t = humanSlackText(m[1].trim());
+    if (t) texts.push(t);
+  }
+  const q = texts.join("\n");
+  return q.length >= MIN_QUERY ? q : null;
+}
+
+/** True for a human prompt, a Wire heartbeat or a human Slack message; false for any other channel event or a task notification. */
+export function shouldAssociate(prompt: string): boolean {
+  return associationQuery(prompt) !== null;
 }
 
 /** Header plus as many lines as fit, the whole block <= max chars (newlines included). Empty when no line fits. */
@@ -51,11 +85,11 @@ async function main() {
     process.exit(0);
   }
 
-  const prompt = hookInput.prompt ?? "";
-  if (!shouldAssociate(prompt)) process.exit(0);
+  const query = associationQuery(hookInput.prompt ?? "");
+  if (query === null) process.exit(0);
 
   try {
-    const result = await searchAssociations(prompt, { topK: 8, vectorLimit: 5 });
+    const result = await searchAssociations(query, { topK: 8, vectorLimit: 5 });
     const assocs = result.results;
     if (assocs.length === 0) process.exit(0);
 
