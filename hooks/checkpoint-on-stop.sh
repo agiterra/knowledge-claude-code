@@ -41,10 +41,14 @@ fi
 [ -d "$VAULT_DIR" ] || exit 0
 [ -d "$VAULT_DIR/.git" ] || [ -f "$VAULT_DIR/../.git/HEAD" ] || true   # tolerate either layout
 
-# Fast path: if the vault has no uncommitted changes, exit silently.
+# Fast path: if the vault has no uncommitted changes AND nothing unpushed, exit silently.
 # git status --porcelain is sub-millisecond on a clean tree.
+# ⛔ 2026-10-19 (Baguette, VAULT-PUSH-STALE ahead=8): a clean tree is not a pushed tree. An agent that commits its
+#   own vault writes leaves the tree clean every turn, so this hook exited before checkpoint.sh — which DOES push
+#   an ahead branch (its 2026-09-23 fix) — ever ran. The 09-23 fix was right and applied one layer too low.
 if [ -z "$(git -C "$VAULT_DIR" status --porcelain . 2>/dev/null)" ]; then
-    exit 0
+    ahead=$(git -C "$VAULT_DIR" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+    [ "${ahead:-0}" -gt 0 ] 2>/dev/null || exit 0
 fi
 
 # Find checkpoint.sh in the plugin cache. Same resolver as session-end.sh.
